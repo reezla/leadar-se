@@ -1,0 +1,49 @@
+segments:
+  surveying:
+    name: Mätning och geodata
+    description: Mätkonsulter, geodata, kartläggning och teknisk dokumentation.
+    sni_prefixes: ["7112", "7420"]
+    keywords: ["mät", "geodata", "kart", "survey", "3d", "dokumentation"]
+    weights: {sni: 45, keyword: 20, size: 20, geography: 10, freshness: 5}
+  construction:
+    name: Bygg och anläggning
+    description: Entreprenörer inom bygg, mark, väg, tunnel och infrastruktur.
+    sni_prefixes: ["41", "42", "43"]
+    keywords: ["bygg", "anlägg", "entreprenad", "mark", "tunnel", "infrastruktur"]
+    weights: {sni: 40, keyword: 20, size: 25, geography: 10, freshness: 5}
+  engineering:
+    name: Arkitekt- och teknikkonsulter
+    description: Projektering, BIM, installation, arkitektur och teknisk konsultation.
+    sni_prefixes: ["7111", "7112"]
+    keywords: ["arkitekt", "ingenjör", "projektering", "bim", "konstruktion", "teknik"]
+    weights: {sni: 45, keyword: 20, size: 20, geography: 10, freshness: 5}
+  mining:
+    name: Gruva och täkt
+    description: Gruvor, stenbrott, ballast och materialutvinning.
+    sni_prefixes: ["05", "07", "08", "09"]
+    keywords: ["gruv", "täkt", "sten", "ballast", "mineral"]
+    weights: {sni: 45, keyword: 20, size: 25, geography: 5, freshness: 5}
+  forestry:
+    name: Skog
+    description: Skogsbruk, inventering och skoglig planering.
+    sni_prefixes: ["02"]
+    keywords: ["skog", "inventering", "virke", "natur"]
+    weights: {sni: 45, keyword: 20, size: 20, geography: 10, freshness: 5}
+  utilities:
+    name: Energi och teknisk infrastruktur
+    description: Elnät, VA, fjärrvärme, ledningar och tekniska försörjningssystem.
+    sni_prefixes: ["35", "36", "37", "422"]
+    keywords: ["energi", "elnät", "kraft", "vatten", "avlopp", "fjärrvärme", "ledning"]
+    weights: {sni: 40, keyword: 20, size: 25, geography: 10, freshness: 5}
+  industry:
+    name: Industri och process
+    description: Tillverkning, processanläggningar och teknikintensiva industrimiljöer.
+    sni_prefixes: ["10", "16", "20", "22", "23", "24", "25", "28", "29", "33"]
+    keywords: ["industri", "fabrik", "process", "verkstad", "produktion"]
+    weights: {sni: 40, keyword: 20, size: 25, geography: 10, freshness: 5}
+  property:
+    name: Fastighet och förvaltning
+    description: Fastighetsägare och teknisk fastighetsförvaltning med dokumentationsbehov.
+    sni_prefixes: ["681", "682", "683"]
+    keywords: ["fastighet", "förvaltning", "lokaler", "facility"]
+    weights: {sni: 40, keyword: 20, size: 25, geography: 10, freshness: 5}

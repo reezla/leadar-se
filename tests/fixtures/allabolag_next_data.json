@@ -1,0 +1,40 @@
+{
+  "buildId": "test-build",
+  "props": {
+    "pageProps": {
+      "numberOfHits": 12,
+      "pagination": {
+        "previous": null,
+        "next": 2,
+        "pageSize": 10,
+        "currentPage": 1
+      },
+      "companies": [
+        {
+          "companyId": "5561234567",
+          "organisationNumber": "556123-4567",
+          "name": "Nordisk Mätteknik AB",
+          "displayName": "Nordisk Mätteknik AB",
+          "homePage": "https://www.example.se",
+          "naceCategories": [
+            "71121 Teknisk konsultverksamhet inom bygg- och anläggningsteknik",
+            "41.000 Byggande"
+          ],
+          "revenue": "12500",
+          "numberOfEmployees": "18",
+          "companyAccountsLastUpdatedDate": "2025",
+          "location": {
+            "county": "Västra Götaland",
+            "municipality": "Göteborg"
+          },
+          "postalAddress": {
+            "addressLine": "Testgatan 1",
+            "zipCode": "411 01",
+            "postPlace": "Göteborg"
+          },
+          "status": {"status": "ACTIVE"}
+        }
+      ]
+    }
+  }
+}

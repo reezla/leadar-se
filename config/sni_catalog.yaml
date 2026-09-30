@@ -1,0 +1,144 @@
+groups:
+  - id: highest_fit
+    title: Highest fit
+    description: Start here. These industries measure, document, or build in 3D as part of the job.
+    codes:
+      - code: "71121"
+        name: Teknisk konsultverksamhet inom bygg- och anläggningsteknik
+        why: Core buyer. Includes surveying consultants.
+      - code: "71122"
+        name: Teknisk konsultverksamhet inom industriteknik
+        why: As-built of factories, process plants, and pipe racks.
+      - code: "71111"
+        name: Arkitektverksamhet
+        why: Scan-to-BIM of existing buildings.
+      - code: "43130"
+        name: Markundersökning
+        why: Site investigation and terrain documentation before construction.
+      - code: "42130"
+        name: Anläggning av broar och tunnlar
+        why: GPS-denied, underground, and long indoor scans.
+      - code: "42110"
+        name: Anläggning av vägar och motorvägar
+        why: Terrain, volumes, and as-built of roadworks.
+      - code: "42120"
+        name: Anläggning av järnvägar och tunnelbanor
+        why: Tunnels, stations, and track environments.
+      - code: "42210"
+        name: Anläggning av allmännyttiga ledningsnät för vätskor
+        why: Water, sewer, trenches, shafts, and underground assets.
+      - code: "42220"
+        name: Anläggning av allmännyttiga ledningsnät för el och tele
+        why: Power and telecom infrastructure documentation.
+      - code: "08120"
+        name: Brytning av grus och sand
+        why: Stockpile and quarry volume measurement.
+      - code: "08110"
+        name: Brytning av ornament- och byggnadssten, kalksten, gips, krita och skiffer
+        why: Quarry faces, volumes, and pit as-built.
+      - code: "02409"
+        name: Övrig service till skogsbruk
+        why: Forest inventory, terrain, and stand documentation.
+
+  - id: strong_second
+    title: Strong second list
+    description: Relevant buyers, but broader. Combine with employee or revenue filters.
+    codes:
+      - code: "41100"
+        name: Utveckling av byggprojekt
+        why: Project developers who need as-built and progress scans.
+      - code: "41200"
+        name: Byggande av bostadshus och andra byggnader
+        why: Progress scans and as-built of buildings.
+      - code: "43"
+        name: Specialiserad bygg- och anläggningsverksamhet
+        why: Site preparation and specialist construction work.
+      - code: "43120"
+        name: Mark- och grundarbeten
+        why: Earthworks and site preparation volumes.
+      - code: "05"
+        name: Kolutvinning
+        why: Underground and volume work.
+      - code: "07"
+        name: Utvinning av metallmalmer
+        why: Mines and underground documentation.
+      - code: "08"
+        name: Annan utvinning av mineral
+        why: Quarries and material extraction.
+      - code: "09"
+        name: Service till utvinning
+        why: Support services around mines and quarries.
+      - code: "02"
+        name: Skogsbruk
+        why: Inventory and terrain work done in-house.
+      - code: "02101"
+        name: Skogsskötsel
+        why: Forest management and inventory.
+      - code: "02200"
+        name: Avverkning
+        why: Harvest planning and terrain documentation.
+      - code: "35"
+        name: Försörjning av el, gas, värme och kyla
+        why: Plants, tunnels, and technical rooms.
+      - code: "36"
+        name: Vattenförsörjning
+        why: Plants, tanks, and underground assets.
+      - code: "37"
+        name: Avloppsrening
+        why: Plants, tanks, and underground assets.
+      - code: "33"
+        name: Reparation och installation av maskiner och apparater
+        why: Industrial as-built before rebuilds.
+      - code: "68201"
+        name: Uthyrning och förvaltning av egna eller arrenderade bostäder
+        why: Building documentation for large housing portfolios.
+      - code: "68320"
+        name: Fastighetsförvaltning på uppdrag
+        why: Facility managers documenting existing buildings.
+      - code: "71123"
+        name: Teknisk konsultverksamhet inom elteknik
+        why: MEP as-built in existing buildings.
+      - code: "71124"
+        name: Teknisk konsultverksamhet inom energi-, miljö- och VVS-teknik
+        why: HVAC and energy as-built in existing buildings.
+
+  - id: noisy
+    title: Use later, they are noisy
+    description: Only a subset of these companies need scanners. Review results manually.
+    codes:
+      - code: "41"
+        name: Byggverksamhet
+        why: Very broad. Filter by size after the precise construction codes.
+      - code: "10"
+        name: Livsmedelsframställning
+        why: Only plants with complex interiors.
+      - code: "16"
+        name: Tillverkning av trä och varor av trä
+        why: Only plants with complex interiors.
+      - code: "20"
+        name: Tillverkning av kemikalier
+        why: Process plants with as-built needs.
+      - code: "22"
+        name: Tillverkning av gummi- och plastvaror
+        why: Only plants with complex interiors.
+      - code: "23"
+        name: Tillverkning av icke-metalliska mineraliska produkter
+        why: Only plants with complex interiors.
+      - code: "24"
+        name: Stål- och metallframställning
+        why: Process plants with as-built needs.
+      - code: "25"
+        name: Tillverkning av metallvaror
+        why: Only plants with complex interiors.
+      - code: "28"
+        name: Tillverkning av övriga maskiner
+        why: Only plants with complex interiors.
+      - code: "29"
+        name: Tillverkning av motorfordon
+        why: Only plants with complex interiors.
+      - code: "681"
+        name: Handel med eget fastighetsbestånd
+        why: Many are holding companies, not scanning users.
+      - code: "7420"
+        name: Fotografisk verksamhet
+        why: Can include mapping firms, but most are ordinary studios.

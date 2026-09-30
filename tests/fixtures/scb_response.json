@@ -1,0 +1,30 @@
+{
+  "items": [
+    {
+      "organisationsnummer": "556123-4567",
+      "foretagsnamn": "Nordisk Mätteknik AB",
+      "sniKoder": [{"kod": "71120"}],
+      "verksamhetsbeskrivning": "Teknisk mätning, geodata och 3D-dokumentation",
+      "kommun": "Göteborg",
+      "lan": "Västra Götaland",
+      "antalAnstalldaStorleksklass": "10–19",
+      "employeeMin": 10,
+      "employeeMax": 19,
+      "arsomsattningStorleksklass": "10–49 MSEK",
+      "revenueMinSek": 10000000,
+      "revenueMaxSek": 49999999,
+      "verksam": true,
+      "webbplats": "https://www.nordiskmatteknik.example"
+    },
+    {
+      "organisationsnummer": "556987-6543",
+      "foretagsnamn": "Exempelbutiken AB",
+      "sniKoder": [{"kod": "47191"}],
+      "kommun": "Stockholm",
+      "lan": "Stockholm",
+      "antalAnstalldaStorleksklass": "1–4",
+      "verksam": true
+    }
+  ],
+  "pagination": {"hasMore": false}
+}

@@ -1,8 +1,15 @@
 from __future__ import annotations
 
-import streamlit as st
+import sys
+from pathlib import Path
 
-from lead_finder.ui import render_allabolag_tab, render_filters, render_scb_tab
+_SRC = Path(__file__).resolve().parent / "src"
+if _SRC.exists() and str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+
+import streamlit as st  # noqa: E402
+
+from lead_finder.ui import render_allabolag_tab, render_filters, render_scb_tab  # noqa: E402
 
 
 def main() -> None:

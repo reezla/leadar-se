@@ -58,6 +58,18 @@ Run the application:
 streamlit run app.py
 ```
 
+## Streamlit Community Cloud
+
+The free Community Cloud tier hosts **public** apps: anyone with the URL can
+open them. The GitHub repo can stay private if you grant Streamlit access.
+
+1. Commit and push `requirements.txt` plus the current `app.py`.
+2. Open [share.streamlit.io](https://share.streamlit.io) and sign in with GitHub.
+3. **Create app** → repository `reezla/leadar-se`, branch `main`, file `app.py`.
+4. Set Python to **3.11**.
+5. Add SCB secrets later in the Cloud app settings if you get credentials.
+   Do not upload client certificates into the public app.
+
 Run verification:
 
 ```bash

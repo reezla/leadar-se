@@ -15,19 +15,20 @@ number, SNI, employees, revenue). It does not collect named contacts or send out
 - Includes presets for surveying, construction, technical consulting, mining,
   forestry, utilities, industry, and property management.
 - Produces an explainable score rather than a black-box recommendation.
+- Maps a Norrpoint or Metricop product family when outreach is drafted.
 - Keeps incomplete records visible and labels missing data.
 - Deduplicates exports by Swedish organization number.
 
 ## SCB access
 
-SCB made Företagsregistret data free in 2025, but access requires accepting its
-terms and receiving credentials. Contact `scbforetag@scb.se` and request the
-company layout needed by this application. SCB's current API uses a client
-certificate and limits responses to 2,000 rows and 10 requests per 10 seconds.
+Search uses [SCB:s allmänna företagsregister](https://apiafr.scb.se/). Every
+request sends the API key in the `X-API-Key` header. Set `SCB_API_URL` to
+`https://apiafr.scb.se` and `SCB_API_KEY` to the key SCB issued.
 
-SCB is replacing the API in September 2026. Confirm the endpoint and request
-schema in the onboarding material you receive, then set `SCB_API_URL`. All
-source-specific behavior is isolated in `src/lead_finder/providers/scb.py`.
+The register accepts one filter per request. SNI prefixes are expanded to exact
+5-digit codes and loaded from `/v1/juridiskaenheter/naringsgren/{code}`. County,
+municipality, employee size, and name text are applied locally. Revenue is not
+included in those list responses, so the revenue fields do not narrow SCB results.
 
 ## Local setup
 
@@ -40,17 +41,14 @@ python -m pip install -e ".[dev]"
 cp .env.example .env
 ```
 
-Update `.env` with the API URL and absolute certificate paths supplied by SCB:
+Update `.env` with the API key supplied by SCB:
 
 ```dotenv
-SCB_API_URL=https://the-endpoint-provided-by-scb
-SCB_CERT_PATH=/absolute/path/client-certificate.pem
-SCB_KEY_PATH=/absolute/path/client-key.pem
-SCB_CERT_PASSWORD=
+SCB_API_URL=https://apiafr.scb.se
+SCB_API_KEY=your-api-key
 ```
 
-If SCB supplies a PKCS#12 file, convert it to PEM files according to SCB's
-credential instructions. Do not commit certificates or `.env`.
+Do not commit `.env`.
 
 Run the application:
 
@@ -67,8 +65,8 @@ open them. The GitHub repo can stay private if you grant Streamlit access.
 2. Open [share.streamlit.io](https://share.streamlit.io) and sign in with GitHub.
 3. **Create app** → repository `reezla/leadar-se`, branch `main`, file `app.py`.
 4. Set Python to **3.11**.
-5. Add SCB secrets later in the Cloud app settings if you get credentials.
-   Do not upload client certificates into the public app.
+5. Add `SCB_API_KEY` later in the Cloud app secrets if you get a key.
+   Do not commit the key.
 
 Run verification:
 
@@ -87,15 +85,23 @@ Unknown employee or revenue data does not automatically exclude a company. It
 is surfaced as a completeness warning so potentially useful leads are not lost
 because the source only provides size classes or has a missing value.
 
+Search does not pick a product. Download the HubSpot CSV as soon as companies
+are listed if you only need the ranked lead list. Product matching runs when
+outreach is drafted: primary SNI, company name, and activity text tag a job
+and recommend a Norrpoint or Metricop family. Secondary SNI codes do not pick
+the product. Unclear codes without name evidence stay `needs review`. Rules
+live in `config/products.yaml` and `config/jobs.yaml`.
+
 Before using the list for sales, manually review the first 50–100 results:
 
 1. Is the industry genuinely relevant to scanning?
 2. Is there a plausible use case: interiors, infrastructure, underground work,
    volume calculations, forestry, scan-to-BIM, or facility documentation?
 3. Does the company have enough operational scale to buy the equipment?
-4. Is the company already present in HubSpot?
+4. Is the recommended product family actually supported by the evidence?
+5. Is the company already present in HubSpot?
 
-Use the review to adjust SNI prefixes, keywords, and weights.
+Use the review to adjust SNI prefixes, keywords, job rules, and weights.
 
 ## HubSpot import
 
@@ -109,6 +115,10 @@ Create these custom company properties before the first import:
 - `Industry codes (SNI)` — single-line or multi-line text.
 - `Data completeness warnings` — multi-line text.
 - `Lead source` and `Source retrieved at`.
+- After outreach drafts: `Recommended brand`, `Recommended job`,
+  `Recommended product`, `Alternative product`, `Match confidence`,
+  `Match evidence`, and `Match status`. These columns are omitted from the CSV
+  until a draft has been generated.
 
 Map `Company domain name` to HubSpot's standard domain property when populated.
 It is HubSpot's preferred company deduplication key. Keep organization number as
@@ -123,8 +133,10 @@ codes appear as clickable chips under the SNI prefixes field.
 - `src/lead_finder/use_company_search.py`: search orchestration.
 - `src/lead_finder/providers/`: replaceable source adapters.
 - `src/lead_finder/scoring.py`: local filtering and explainable ranking.
+- `src/lead_finder/matching.py`: Norrpoint and Metricop product rules.
 - `src/lead_finder/exporters/`: HubSpot CSV mapping.
 - `config/segments.yaml`: editable target-market presets.
+- `config/products.yaml` and `config/jobs.yaml`: product families and job rules.
 - `tests/`: fixture-driven provider, scoring, rate-limit, and export tests.
 
 ## Data and outreach guardrails

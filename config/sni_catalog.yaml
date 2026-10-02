@@ -9,7 +9,7 @@ groups:
       - code: "71122"
         name: Teknisk konsultverksamhet inom industriteknik
         why: As-built of factories, process plants, and pipe racks.
-      - code: "71111"
+      - code: "71110"
         name: Arkitektverksamhet
         why: Scan-to-BIM of existing buildings.
       - code: "43130"

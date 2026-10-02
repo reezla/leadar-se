@@ -11,16 +11,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    scb_api_url: str = "https://api.scb.se/foretagsregistret/v1/foretag"
-    scb_cert_path: Path | None = None
-    scb_key_path: Path | None = None
-    scb_cert_password: str | None = None
+    scb_api_url: str = "https://apiafr.scb.se"
+    scb_api_key: str | None = None
     scb_timeout_seconds: float = 30
     scb_page_size: int = 2_000
     scb_requests_per_window: int = 10
     scb_rate_limit_window_seconds: float = 10
     segments_path: Path = Path("config/segments.yaml")
     sni_catalog_path: Path = Path("config/sni_catalog.yaml")
+    products_path: Path = Path("config/products.yaml")
+    jobs_path: Path = Path("config/jobs.yaml")
+    norrpoint_prompt_path: Path = Path("write-email-norrpoint.md")
     allabolag_base_url: str = "https://www.allabolag.se"
     allabolag_timeout_seconds: float = 30
     allabolag_requests_per_window: int = 4
@@ -29,6 +30,20 @@ class Settings(BaseSettings):
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
     )
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-4o-mini"
+    openai_api_url: str = "https://api.openai.com/v1/chat/completions"
+    website_search_provider: str = "google"
+    google_search_url: str = "https://www.google.com/search"
+    duckduckgo_search_url: str = "https://html.duckduckgo.com/html/"
+    google_search_timeout_seconds: float = 20
+    google_requests_per_window: int = 4
+    google_rate_limit_window_seconds: float = 10
+    website_crawl_timeout_seconds: float = 20
+    website_crawl_max_pages: int = 4
+    website_crawl_requests_per_window: int = 4
+    website_crawl_rate_limit_window_seconds: float = 10
+    outreach_max_selected: int = 20
 
 
 class Segment(BaseModel):

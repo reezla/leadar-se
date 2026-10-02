@@ -3,6 +3,7 @@ from __future__ import annotations
 import streamlit as st
 
 from lead_finder.sni_catalog import SniGroup, load_sni_catalog
+from lead_finder.ui.layout import PREFIX_COLUMNS
 from lead_finder.use_sni_selection import (
     SNI_PREFIXES_KEY,
     add_sni_prefix,
@@ -22,18 +23,21 @@ def render_sni_prefix_selector(segment_key: str, segment_prefixes: list[str]) ->
     selected = list(st.session_state.get(SNI_PREFIXES_KEY) or [])
     options = list(dict.fromkeys([*catalog.codes(), *selected]))
 
-    chosen = st.multiselect(
-        "SNI prefixes",
-        options=options,
-        format_func=lambda code: format_sni_label(code, catalog),
-        accept_new_options=True,
-        key=SNI_PREFIXES_KEY,
-        placeholder="Type a custom SNI prefix",
-        help=(
-            "Hard filters. Click a code below to add it. "
-            "Selected codes appear here and can be removed with x."
-        ),
-    )
+    prefix_column, _prefix_spacer = st.columns(PREFIX_COLUMNS)
+    with prefix_column:
+        chosen = st.multiselect(
+            "SNI prefixes",
+            options=options,
+            format_func=lambda code: format_sni_label(code, catalog),
+            accept_new_options=True,
+            key=SNI_PREFIXES_KEY,
+            placeholder="Type a custom SNI prefix",
+            wrap=True,
+            help=(
+                "Hard filters. Click a code below to add it. "
+                "Selected codes appear here and can be removed with x."
+            ),
+        )
     prefixes = parse_sni_prefixes(",".join(str(item) for item in chosen))
 
     st.caption("Click a code to add it to the search.")
@@ -60,5 +64,5 @@ def _render_catalog_group(group: SniGroup, selected: list[str]) -> None:
                 disabled=item.code in selected,
                 on_click=_add_prefix,
                 args=(item.code,),
-                use_container_width=True,
+                width="stretch",
             )

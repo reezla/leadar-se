@@ -1,0 +1,37 @@
+families:
+  c1:
+    brand: norrpoint
+    name: C1
+  v4e:
+    brand: norrpoint
+    name: V4e
+  p2:
+    brand: norrpoint
+    name: P2
+  p2_vision:
+    brand: norrpoint
+    name: P2 Vision+
+  s1:
+    brand: norrpoint
+    name: S1
+  s2:
+    brand: norrpoint
+    name: S2
+  x1:
+    brand: norrpoint
+    name: X1
+  t1:
+    brand: norrpoint
+    name: T1
+  v100f:
+    brand: norrpoint
+    name: V100F
+  metricop_field:
+    brand: metricop
+    name: Metricop fält
+  metricop_monitoring:
+    brand: metricop
+    name: Metricop monitorering
+  metricop_smr:
+    brand: metricop
+    name: Metricop SMR

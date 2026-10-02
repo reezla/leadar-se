@@ -46,7 +46,10 @@ class CompanySearchFilters(BaseModel):
     revenue_max_sek: int | None = None
     active_only: bool = True
     text_query: str | None = None
-    limit: int = Field(default=500, ge=1, le=10_000)
+    limit: int | None = Field(default=500, ge=1, le=10_000)
+
+    def reached(self, count: int) -> bool:
+        return self.limit is not None and count >= self.limit
 
 
 class ScoreReason(BaseModel):
@@ -54,8 +57,52 @@ class ScoreReason(BaseModel):
     points: int
 
 
+class ProductMatch(BaseModel):
+    job: str | None = None
+    brand: str = "none"
+    primary: str | None = None
+    alternative: str | None = None
+    confidence: str = "low"
+    evidence: list[str] = Field(default_factory=list)
+    status: str = "needs_review"
+
+
+class WebsiteProfile(BaseModel):
+    url: str
+    about_text: str | None = None
+    projects_text: str | None = None
+    pages_fetched: list[str] = Field(default_factory=list)
+    source: str = "google"
+    suggested_recipient: str | None = None
+
+
+class OutreachDraft(BaseModel):
+    subject: str = ""
+    body: str = ""
+    status: str = "needs_review"
+    detail: str = ""
+    suggested_recipient: str | None = None
+    website: WebsiteProfile | None = None
+    customer_fit: str = ""
+    customer_fit_reason: str = ""
+
+    @field_validator("website", mode="before")
+    @classmethod
+    def _coerce_website(cls, value: object) -> object:
+        if value is None:
+            return None
+        if isinstance(value, dict):
+            return value
+        dump = getattr(value, "model_dump", None)
+        if callable(dump):
+            return dump(mode="json")
+        return value
+
+
 class ScoredCompany(BaseModel):
     company: Company
     score: int
     reasons: list[ScoreReason]
     missing_data: list[str] = Field(default_factory=list)
+    product_match: ProductMatch | None = None
+    outreach: OutreachDraft | None = None

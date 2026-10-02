@@ -40,6 +40,11 @@ def test_build_query_maps_sni_revenue_and_employees() -> None:
     assert query["sort"] == "revenueDesc"
 
 
+def test_build_query_maps_architect_71111_to_register_code() -> None:
+    query = build_query(CompanySearchFilters(sni_prefixes=["71111"], limit=10))
+    assert query["naceIndustry"] == "71.110"
+
+
 def test_build_search_url_omits_first_page() -> None:
     url = build_search_url(
         "https://www.allabolag.se",

@@ -1,0 +1,185 @@
+jobs:
+  - id: thermal
+    name: Energi och termografi
+    brand: norrpoint
+    priority: 10
+    sni_prefixes: ["71124"]
+    keywords:
+      - termografi
+      - värmekamera
+      - energiinventering
+      - energideklaration
+      - vvs-diagnostik
+    require_keywords: true
+    primary: p2_vision
+    alternative: p2
+  - id: scan_to_bim
+    name: Scan-to-BIM och as-built
+    brand: norrpoint
+    priority: 20
+    sni_prefixes: ["71110", "71111", "71121", "71122", "71123", "71124"]
+    keywords:
+      - bim
+      - as-built
+      - asbuilt
+      - scan-to-bim
+      - punktmoln
+      - teknikrum
+      - 3d-dokumentation
+    require_keywords: true
+    primary: p2
+    alternative: x1
+  - id: survey_firm
+    name: Mätkonsult
+    brand: norrpoint
+    priority: 25
+    keywords:
+      - mätkonsult
+      - mätcenter
+      - mätteknik
+      - teodolit
+      - geomatikk
+      - geodesi
+      - geomanagement
+      - lantmäteri
+    require_keywords: true
+    primary: s1
+    alternative: p2
+  - id: indoor_plans
+    name: Inomhusplanritningar
+    brand: norrpoint
+    priority: 30
+    sni_prefixes: ["71110", "71111", "682", "683"]
+    keywords: ["planritning", "planlösning", "dxf", "relationshandling"]
+    primary: c1
+    alternative: p2
+  - id: gnss_pole
+    name: GNSS och stolpmätning
+    brand: norrpoint
+    priority: 40
+    keywords: ["stolpmät", "punktmät", "utsättning", "gnss", "rtk"]
+    require_keywords: true
+    primary: v100f
+  - id: tunnel_asbuilt
+    name: Tunnel, under jord och gruva
+    brand: norrpoint
+    priority: 50
+    sni_prefixes: ["42130", "05", "07", "09"]
+    keywords: ["tunnel", "bergrum", "under jord", "gruva"]
+    primary: s2
+    alternative: t1
+  - id: large_outdoor
+    name: Infrastruktur och täkt
+    brand: norrpoint
+    priority: 60
+    sni_prefixes: ["42110", "42120", "081", "08"]
+    keywords: ["täkt", "ballast", "infrastruktur", "järnväg", "motorväg"]
+    primary: s2
+    alternative: t1
+  - id: forestry
+    name: Skog utan GNSS
+    brand: norrpoint
+    priority: 70
+    sni_prefixes: ["02"]
+    keywords: ["skog", "bestånd", "skogsbruk"]
+    primary: s1
+    alternative: t1
+  - id: industrial
+    name: Industri och process
+    brand: norrpoint
+    priority: 80
+    sni_prefixes: ["71122", "33"]
+    keywords: ["industri", "processanlägg", "fabrik", "rörbrygga"]
+    primary: p2
+    alternative: s2
+  - id: electrical
+    name: Elteknik och as-built
+    brand: norrpoint
+    priority: 90
+    sni_prefixes: ["71123"]
+    keywords: ["elkonsult", "elprojektering"]
+    primary: p2
+    alternative: p2_vision
+  - id: energy_hvac
+    name: Energi- och VVS-konsult
+    brand: norrpoint
+    priority: 95
+    sni_prefixes: ["71124"]
+    primary: p2
+    alternative: p2_vision
+  - id: utilities
+    name: Energi och VA
+    brand: norrpoint
+    priority: 100
+    sni_prefixes: ["35", "36", "37", "422"]
+    keywords: ["fjärrvärme", "avlopp", "vattenverk", "elnät"]
+    primary: p2
+    alternative: s2
+  - id: site_investigation
+    name: Markundersökning
+    brand: norrpoint
+    priority: 110
+    sni_prefixes: ["43130"]
+    keywords: ["markundersökning", "geoteknik"]
+    primary: s1
+    alternative: s2
+  - id: construction_crew
+    name: Byggarbetsplats
+    brand: norrpoint
+    priority: 120
+    sni_prefixes: ["411", "412"]
+    keywords: ["byggarbetsplats", "entreprenad"]
+    employee_min: 5
+    primary: x1
+    alternative: p2
+  - id: entry_scanner
+    name: Grundläggande 3D-insamling
+    brand: norrpoint
+    priority: 130
+    sni_prefixes: ["411", "412", "7111", "683"]
+    employee_max: 4
+    primary: v4e
+    alternative: p2
+  - id: general_survey
+    name: Allmän mätning
+    brand: norrpoint
+    priority: 140
+    sni_prefixes: ["71121"]
+    sni_only_status: needs_review
+  - id: smr
+    name: Industriell mätteknik
+    brand: metricop
+    priority: 10
+    sni_prefixes: ["33", "25", "28", "29"]
+    keywords: ["smr", "lasertracker", "tracker", "inpassning", "cmm"]
+    require_keywords: true
+    primary: metricop_smr
+  - id: monitoring
+    name: Monitorering
+    brand: metricop
+    priority: 20
+    keywords: ["monitorering", "deformation", "sättning", "kontrollpunkt"]
+    require_keywords: true
+    primary: metricop_monitoring
+  - id: field_accessories
+    name: Geodetisk fältmätning
+    brand: metricop
+    priority: 30
+    keywords:
+      - prisma
+      - totalstation
+      - trefot
+      - leica
+      - trimble
+      - topcon
+      - sokkia
+      - mätkonsult
+      - mätcenter
+      - mätteknik
+      - teodolit
+      - geomatikk
+      - geodesi
+      - geomanagement
+      - lantmäteri
+    require_keywords: true
+    primary: metricop_field

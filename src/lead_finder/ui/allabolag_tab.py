@@ -29,7 +29,9 @@ def render_allabolag_tab(segment_key: str, filters: CompanySearchFilters) -> Non
         progress = st.progress(0, text="Starting Allabolag crawl...")
 
         def on_progress(page: int, fetched: int, hits: int) -> None:
-            target = min(hits, filters.limit) or 1
+            target = hits or 1
+            if filters.limit is not None:
+                target = min(hits, filters.limit) or 1
             progress.progress(
                 min(fetched / target, 1.0),
                 text=f"Page {page}: {fetched} of {target} ({hits} matches)",
@@ -43,10 +45,19 @@ def render_allabolag_tab(segment_key: str, filters: CompanySearchFilters) -> Non
                 ab_only=ab_only,
                 on_progress=on_progress,
             )
+            st.session_state["allabolag_result_nonce"] = (
+                int(st.session_state.get("allabolag_result_nonce") or 0) + 1
+            )
             progress.progress(1.0, text="Crawl finished")
         except Exception as error:
             st.error(f"Allabolag crawl failed: {error}")
 
     result = st.session_state.get("allabolag_result")
-    if result:
-        render_results(result, download_name="allabolag-lidar-leads.csv")
+    if result and result.companies:
+        render_results(
+            result,
+            download_name="allabolag-lidar-leads.csv",
+            session_key="allabolag_result",
+        )
+    elif result:
+        st.warning("No companies matched these filters. Add SNI prefixes or widen the search.")

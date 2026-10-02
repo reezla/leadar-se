@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import ssl
-from collections.abc import Iterable, Mapping
-from datetime import UTC, datetime
+import time
+from collections.abc import Mapping
 from typing import Any
 
 import httpx
@@ -10,14 +9,13 @@ import httpx
 from lead_finder.config import Settings
 from lead_finder.models import Company, CompanySearchFilters
 from lead_finder.providers.rate_limit import SlidingWindowRateLimiter
+from lead_finder.providers.scb_map import normalize_company
+from lead_finder.scoring import filter_companies
+from lead_finder.sni_resolve import expand_sni_prefixes, resolve_industry_codes
 
 
 class ScbCompanyProvider:
-    """Adapter for SCB Företagsregistret.
-
-    The endpoint and credentials are configurable because SCB is replacing the API
-    during 2026. Only this adapter should need changing when the migration completes.
-    """
+    """Adapter for SCB:s allmänna företagsregister (https://apiafr.scb.se)."""
 
     def __init__(
         self,
@@ -32,11 +30,10 @@ class ScbCompanyProvider:
             settings.scb_rate_limit_window_seconds,
         )
         self._owns_client = client is None
-        self.client = client or httpx.Client(
-            timeout=settings.scb_timeout_seconds,
-            verify=self._ssl_context(),
-            headers={"Accept": "application/json", "Content-Type": "application/json"},
-        )
+        self._api_key = ""
+        self._code_tables: dict[str, dict[str, str]] = {}
+        self.first_raw_record: dict[str, Any] | None = None
+        self.client = client or httpx.Client(timeout=settings.scb_timeout_seconds)
 
     def close(self) -> None:
         if self._owns_client:
@@ -49,169 +46,158 @@ class ScbCompanyProvider:
         self.close()
 
     def search(self, filters: CompanySearchFilters) -> list[Company]:
-        companies: list[Company] = []
-        offset = 0
-        page_size = min(self.settings.scb_page_size, filters.limit)
+        api_key = (self.settings.scb_api_key or "").strip()
+        if not api_key:
+            raise ValueError("SCB_API_KEY is missing. Add it to .env and restart the app.")
+        self._api_key = api_key
 
-        while len(companies) < filters.limit:
+        counties = self._code_table("lankoder")
+        municipalities = self._code_table("kommunkoder")
+        if filters.sni_prefixes:
+            industry = self._code_table("naringsgrenkoder")
+            filters = filters.model_copy(
+                update={
+                    "sni_prefixes": expand_sni_prefixes(filters.sni_prefixes, industry)
+                }
+            )
+        collected: list[Company] = []
+        seen: set[str] = set()
+        for path in self._collection_paths(filters, counties, municipalities):
+            self._collect(path, filters, counties, municipalities, collected, seen)
+            if filters.reached(len(collected)):
+                break
+        return collected[: filters.limit]
+
+    def _collection_paths(
+        self,
+        filters: CompanySearchFilters,
+        counties: Mapping[str, str],
+        municipalities: Mapping[str, str],
+    ) -> list[str]:
+        if filters.sni_prefixes:
+            codes = self._industry_codes(filters.sni_prefixes)
+            return [f"juridiskaenheter/naringsgren/{code}" for code in codes]
+        county_codes = _codes_for_names(filters.counties, counties)
+        if county_codes:
+            return [f"juridiskaenheter/lan/{code}" for code in county_codes]
+        municipality_codes = _codes_for_names(filters.municipalities, municipalities)
+        if municipality_codes:
+            return [f"juridiskaenheter/kommun/{code}" for code in municipality_codes]
+        return ["juridiskaenheter"]
+
+    def _industry_codes(self, prefixes: list[str]) -> list[str]:
+        return resolve_industry_codes(prefixes, self._code_table("naringsgrenkoder"))
+
+    def _collect(
+        self,
+        path: str,
+        filters: CompanySearchFilters,
+        counties: Mapping[str, str],
+        municipalities: Mapping[str, str],
+        collected: list[Company],
+        seen: set[str],
+    ) -> None:
+        cursor: int | None = None
+        seen_cursors: set[int] = set()
+        while not filters.reached(len(collected)):
+            payload = self._get(path, cursor)
+            records = payload.get("jes") if isinstance(payload, dict) else None
+            if not isinstance(records, list) or not records:
+                return
+            for record in records:
+                if not isinstance(record, Mapping):
+                    continue
+                company = normalize_company(
+                    record, counties=counties, municipalities=municipalities
+                )
+                if company.organization_number in seen:
+                    continue
+                if not filter_companies([company], filters):
+                    continue
+                seen.add(company.organization_number)
+                collected.append(company)
+                if self.first_raw_record is None:
+                    self.first_raw_record = dict(record)
+                if filters.reached(len(collected)):
+                    return
+            next_cursor = _next_cursor(payload, seen_cursors)
+            if next_cursor is None:
+                return
+            seen_cursors.add(next_cursor)
+            cursor = next_cursor
+
+    def _get(self, path: str, cursor: int | None, *, paginate: bool = True) -> Any:
+        params: dict[str, int] | None = None
+        if paginate:
+            params = {"limit": self._page_size()}
+            if cursor is not None:
+                params["cursorId"] = cursor
+        response: httpx.Response | None = None
+        for attempt in range(3):
             self.rate_limiter.wait()
-            response = self.client.post(
-                self.settings.scb_api_url,
-                json=self._build_request(filters, offset=offset, limit=page_size),
+            response = self.client.get(
+                self._url(path),
+                params=params,
+                headers={"Accept": "application/json", "X-API-Key": self._api_key},
             )
-            response.raise_for_status()
-            records, has_more = self._extract_page(response.json(), page_size)
-            if not records:
-                break
-            companies.extend(self._normalize(record) for record in records)
-            if not has_more:
-                break
-            offset += len(records)
+            if response.status_code == 429 and attempt < 2:
+                time.sleep(_retry_after(response))
+                continue
+            break
+        if response is None or response.status_code == 401:
+            raise ValueError("SCB rejected SCB_API_KEY (HTTP 401).")
+        response.raise_for_status()
+        return response.json()
 
-        return companies[: filters.limit]
-
-    def _ssl_context(self) -> ssl.SSLContext:
-        context = ssl.create_default_context()
-        cert_path = self.settings.scb_cert_path
-        key_path = self.settings.scb_key_path
-        if cert_path:
-            context.load_cert_chain(
-                certfile=str(cert_path),
-                keyfile=str(key_path) if key_path else None,
-                password=self.settings.scb_cert_password,
-            )
-        return context
-
-    @staticmethod
-    def _build_request(
-        filters: CompanySearchFilters, *, offset: int, limit: int
-    ) -> dict[str, Any]:
-        return {
-            "offset": offset,
-            "limit": limit,
-            "filters": {
-                "sniPrefixes": filters.sni_prefixes,
-                "counties": filters.counties,
-                "municipalities": filters.municipalities,
-                "activeOnly": filters.active_only,
-                "text": filters.text_query,
-            },
+    def _code_table(self, name: str) -> dict[str, str]:
+        cached = self._code_tables.get(name)
+        if cached is not None:
+            return cached
+        payload = self._get(f"kodtabeller/{name}", None, paginate=False)
+        if not isinstance(payload, list):
+            raise ValueError(f"SCB code table {name} returned an unexpected payload")
+        table = {
+            str(item["kod"]): str(item["klartext"])
+            for item in payload
+            if isinstance(item, Mapping) and item.get("kod") is not None
         }
+        self._code_tables[name] = table
+        return table
 
-    @staticmethod
-    def _extract_page(payload: Any, page_size: int) -> tuple[list[Mapping[str, Any]], bool]:
-        if isinstance(payload, list):
-            records = payload
-            return records, len(records) == page_size
-        records = (
-            payload.get("items")
-            or payload.get("results")
-            or payload.get("foretag")
-            or payload.get("records")
-            or []
-        )
-        pagination = payload.get("pagination", {})
-        has_more = bool(
-            payload.get("hasMore")
-            or pagination.get("hasMore")
-            or pagination.get("next")
-            or len(records) == page_size
-        )
-        return records, has_more
+    def _page_size(self) -> int:
+        return min(max(self.settings.scb_page_size, 1), 5000)
 
-    @classmethod
-    def _normalize(cls, record: Mapping[str, Any]) -> Company:
-        organization_number = cls._first(
-            record, "organisationsnummer", "organizationNumber", "orgNumber", "orgnr"
-        )
-        name = cls._first(record, "foretagsnamn", "companyName", "name", "namn")
-        if not organization_number or not name:
-            raise ValueError("SCB record is missing organization number or company name")
+    def _url(self, path: str) -> str:
+        base = self.settings.scb_api_url.rstrip("/")
+        if not base.endswith("/v1"):
+            base = f"{base}/v1"
+        return f"{base}/{path.lstrip('/')}"
 
-        employee_min, employee_max = cls._interval(
-            record,
-            low_keys=("employeeMin", "antalAnstalldaMin"),
-            high_keys=("employeeMax", "antalAnstalldaMax"),
-        )
-        revenue_min, revenue_max = cls._interval(
-            record,
-            low_keys=("revenueMinSek", "omsattningMin"),
-            high_keys=("revenueMaxSek", "omsattningMax"),
-        )
-        return Company(
-            organization_number=str(organization_number),
-            name=str(name),
-            workplace_name=cls._first(record, "arbetsstallenamn", "workplaceName"),
-            sni_codes=cls._sni_codes(record),
-            activity_description=cls._first(
-                record, "verksamhetsbeskrivning", "activityDescription"
-            ),
-            municipality=cls._first(record, "kommun", "municipality", "kommunNamn"),
-            county=cls._first(record, "lan", "county", "lanNamn"),
-            postal_address=cls._address(record),
-            employee_class=cls._first(
-                record, "antalAnstalldaStorleksklass", "employeeSizeClass"
-            ),
-            employee_min=employee_min,
-            employee_max=employee_max,
-            revenue_class=cls._first(
-                record, "arsomsattningStorleksklass", "revenueSizeClass"
-            ),
-            revenue_min_sek=revenue_min,
-            revenue_max_sek=revenue_max,
-            active=bool(cls._first(record, "verksam", "active", default=True)),
-            domain=cls._first(record, "webbplats", "website", "domain"),
-            retrieved_at=datetime.now(UTC),
-        )
 
-    @staticmethod
-    def _first(record: Mapping[str, Any], *keys: str, default: Any = None) -> Any:
-        for key in keys:
-            if key in record and record[key] not in (None, ""):
-                return record[key]
-        return default
+def _codes_for_names(names: list[str], table: Mapping[str, str]) -> list[str]:
+    by_name = {label.casefold(): code for code, label in table.items()}
+    codes: list[str] = []
+    for name in names:
+        code = by_name.get(name.casefold())
+        if code is None and name in table:
+            code = name
+        if code is not None:
+            codes.append(code)
+    return codes
 
-    @classmethod
-    def _sni_codes(cls, record: Mapping[str, Any]) -> list[str]:
-        raw = cls._first(record, "sniKoder", "sniCodes", "sni", default=[])
-        if isinstance(raw, str):
-            return [part.strip() for part in raw.split(",") if part.strip()]
-        return [
-            str(item.get("kod") or item.get("code"))
-            if isinstance(item, Mapping)
-            else str(item)
-            for item in raw
-            if item
-        ]
 
-    @classmethod
-    def _address(cls, record: Mapping[str, Any]) -> str | None:
-        direct = cls._first(record, "postadress", "postalAddress")
-        if isinstance(direct, str):
-            return direct
-        if isinstance(direct, Mapping):
-            parts = [
-                cls._first(direct, "adress", "street"),
-                cls._first(direct, "postnummer", "postalCode"),
-                cls._first(direct, "postort", "city"),
-            ]
-            return ", ".join(str(part) for part in parts if part)
+def _next_cursor(payload: Mapping[str, Any], seen_cursors: set[int]) -> int | None:
+    pagination = payload.get("pagination")
+    if not isinstance(pagination, Mapping) or not pagination.get("hasMore"):
         return None
+    cursor = pagination.get("nextCursorId")
+    if not isinstance(cursor, int) or cursor in seen_cursors:
+        return None
+    return cursor
 
-    @classmethod
-    def _interval(
-        cls,
-        record: Mapping[str, Any],
-        *,
-        low_keys: Iterable[str],
-        high_keys: Iterable[str],
-    ) -> tuple[int | None, int | None]:
-        low = cls._first(record, *low_keys)
-        high = cls._first(record, *high_keys)
-        return cls._integer(low), cls._integer(high)
 
-    @staticmethod
-    def _integer(value: Any) -> int | None:
-        if value in (None, ""):
-            return None
-        return int(value)
+def _retry_after(response: httpx.Response) -> float:
+    try:
+        return max(float(response.headers.get("Retry-After", "1")), 0)
+    except ValueError:
+        return 1

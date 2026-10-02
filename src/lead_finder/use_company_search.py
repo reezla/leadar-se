@@ -6,6 +6,7 @@ from lead_finder.config import Segment
 from lead_finder.models import CompanySearchFilters, ScoredCompany
 from lead_finder.providers.base import CompanyProvider
 from lead_finder.scoring import filter_companies, rank_companies
+from lead_finder.sni_resolve import expand_sni_prefixes
 
 
 @dataclass(frozen=True)
@@ -26,6 +27,9 @@ def search_companies(
     filters: CompanySearchFilters,
     segment: Segment,
 ) -> SearchResult:
+    filters = filters.model_copy(
+        update={"sni_prefixes": expand_sni_prefixes(filters.sni_prefixes)}
+    )
     fetched = provider.search(filters)
     matching = filter_companies(fetched, filters)
     ranked = rank_companies(matching, segment, filters)

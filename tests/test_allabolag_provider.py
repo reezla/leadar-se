@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import httpx
 import pytest
@@ -67,6 +67,43 @@ def test_provider_paginates_html_then_json() -> None:
     assert [company.name for company in companies] == ["Company 1", "Company 2"]
     assert requests[0].url.path.endswith("/segmentering")
     assert requests[1].url.path.endswith("/segmentation.json")
+
+
+def test_provider_fetches_all_pages_when_limit_is_none() -> None:
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        parsed = urlparse(str(request.url))
+        page = int(parse_qs(parsed.query).get("page", ["1"])[0])
+        next_page = page + 1 if page < 3 else None
+        payload = _payload(page=page, next_page=next_page, org_suffix=str(page))
+        if parsed.path.endswith("/segmentering"):
+            document = {
+                "buildId": "test-build",
+                "props": {"pageProps": payload["pageProps"]},
+            }
+            html = f'<script id="__NEXT_DATA__">{json.dumps(document)}</script>'
+            return httpx.Response(200, text=html)
+        if parsed.path.endswith("/segmentation.json"):
+            return httpx.Response(200, json=payload)
+        return httpx.Response(404)
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    provider = AllabolagCompanyProvider(
+        Settings(allabolag_base_url="https://allabolag.example"),
+        client=client,
+        rate_limiter=NoOpRateLimiter(),
+    )
+
+    companies = provider.search(CompanySearchFilters(sni_prefixes=["71121"], limit=None))
+
+    assert [company.name for company in companies] == [
+        "Company 1",
+        "Company 2",
+        "Company 3",
+    ]
+    assert len(requests) == 3
 
 
 def test_provider_requires_sni_prefix() -> None:

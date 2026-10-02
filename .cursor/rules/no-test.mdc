@@ -1,0 +1,19 @@
+---
+description: After writing code, stop. Do not burn tokens on extra verification loops.
+alwaysApply: true
+---
+
+# Stop after the code is written
+
+When the implementation is done (files saved, tests added if needed, lint clean), **stop**.
+
+Do not then:
+
+- Restart Streamlit or other local servers "just to check"
+- Drive the browser through search / click / wait / screenshot loops
+- Re-search, re-click, or re-verify the same flow
+- Keep iterating after the requested code is in place
+
+Unit tests that already exist in the repo may be run once. Browser verification is the user's job unless they explicitly ask for it in that message.
+
+If something is still unclear, ask — do not keep acting to find out.

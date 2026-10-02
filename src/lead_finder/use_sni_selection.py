@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import MutableMapping
 
 from lead_finder.sni_catalog import SniCatalog, SniCode
+from lead_finder.sni_resolve import canonical_sni_prefix
 
 SNI_PREFIXES_KEY = "sni_prefixes"
 SNI_SEGMENT_KEY = "sni_segment_key"
@@ -18,7 +19,7 @@ def parse_sni_prefixes(value: str) -> list[str]:
 
 
 def normalize_sni_prefix(value: str) -> str:
-    return value.replace(".", "").strip()
+    return canonical_sni_prefix(value.replace(".", "").strip())
 
 
 def add_sni_prefix(selected: list[str], prefix: str) -> list[str]:
@@ -35,7 +36,7 @@ def remove_sni_prefix(selected: list[str], prefix: str) -> list[str]:
 
 def format_sni_label(code: str, catalog: SniCatalog | dict[str, SniCode]) -> str:
     lookup = catalog.by_code() if isinstance(catalog, SniCatalog) else catalog
-    item = lookup.get(code)
+    item = lookup.get(code) or lookup.get(canonical_sni_prefix(code))
     if item is None:
         return code
     return f"{item.code} — {item.name}"
@@ -48,7 +49,12 @@ def sync_sni_selection(
     segment_prefixes: list[str],
 ) -> list[str]:
     current = session.get(SNI_PREFIXES_KEY)
-    if session.get(SNI_SEGMENT_KEY) != segment_key or not isinstance(current, list):
+    stored_segment = session.get(SNI_SEGMENT_KEY)
+    if stored_segment is None:
+        session[SNI_PREFIXES_KEY] = []
+        session[SNI_SEGMENT_KEY] = segment_key
+        return []
+    if stored_segment != segment_key or not isinstance(current, list):
         prefixes = list(segment_prefixes)
         session[SNI_PREFIXES_KEY] = prefixes
         session[SNI_SEGMENT_KEY] = segment_key

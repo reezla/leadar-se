@@ -9,6 +9,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 from lead_finder.models import Company, CompanySearchFilters
+from lead_finder.sni_resolve import resolve_industry_codes
 
 NEXT_DATA_RE = re.compile(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', re.DOTALL)
 SNI_RE = re.compile(r"^(\d{2,5})")
@@ -42,7 +43,8 @@ def build_query(
     query: dict[str, str] = {"sort": sort, "page": str(page)}
     if filters.sni_prefixes:
         query["naceIndustry"] = ",".join(
-            format_nace_industry(prefix) for prefix in filters.sni_prefixes
+            format_nace_industry(prefix)
+            for prefix in resolve_industry_codes(filters.sni_prefixes)
         )
     locations = [*filters.municipalities, *filters.counties]
     if locations:

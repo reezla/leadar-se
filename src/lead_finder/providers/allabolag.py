@@ -65,7 +65,7 @@ class AllabolagCompanyProvider:
         companies: list[Company] = []
         seen: set[str] = set()
         page_number = 1
-        while len(companies) < filters.limit:
+        while not filters.reached(len(companies)):
             parsed = self._fetch_page(filters, page_number)
             if parsed.build_id:
                 self._build_id = parsed.build_id
@@ -76,7 +76,7 @@ class AllabolagCompanyProvider:
                 seen.add(company.organization_number)
                 companies.append(company)
                 added += 1
-                if len(companies) >= filters.limit:
+                if filters.reached(len(companies)):
                     break
             if self.on_progress:
                 self.on_progress(parsed.page, len(companies), parsed.hits)

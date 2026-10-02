@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field
@@ -56,7 +58,26 @@ class Segment(BaseModel):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return Settings(**_streamlit_settings())
+
+
+def _streamlit_settings() -> dict[str, Any]:
+    try:
+        import streamlit as st
+
+        return settings_from_secrets(st.secrets)
+    except Exception:
+        return {}
+
+
+def settings_from_secrets(secrets: Mapping[str, object]) -> dict[str, Any]:
+    values: dict[str, Any] = {}
+    for field_name in Settings.model_fields:
+        for key in (field_name.upper(), field_name):
+            if key in secrets:
+                values[field_name] = secrets[key]
+                break
+    return values
 
 
 def load_segments(path: Path | None = None) -> dict[str, Segment]:

@@ -57,7 +57,10 @@ def render_outreach_preview(
         st.warning(draft.detail or "No official website found.")
         return result
     if draft.detail and draft.detail != "template":
-        st.caption(draft.detail)
+        if draft.detail.startswith("AI generation"):
+            st.warning(draft.detail)
+        else:
+            st.caption(draft.detail)
     nonce = st.session_state.get(f"{session_key}_nonce", 0)
     org = scored.company.organization_number
     subject = st.text_input(

@@ -4,8 +4,9 @@ import httpx
 
 from lead_finder.config import Settings
 from lead_finder.models import Company, ProductMatch, WebsiteProfile
+from lead_finder.outreach_prompt import spoken_company_name, user_prompt
 from lead_finder.outreach_sender import system_prompt
-from lead_finder.outreach_write import OutreachWriter, spoken_company_name, user_prompt
+from lead_finder.outreach_write import OutreachWriter
 
 
 def test_user_prompt_includes_product_and_site_text() -> None:
@@ -81,6 +82,7 @@ def test_writer_without_api_key_returns_sell_template() -> None:
     assert "Aquasvea AB" in draft.body
     assert "VA-projekt" in draft.body
     assert "Norrpoint" in draft.body
+    assert "OPENAI_API_KEY is not configured" in draft.detail
 
 
 def test_metricop_template_signs_off_as_metricop() -> None:
@@ -179,3 +181,23 @@ def test_writer_falls_back_to_template_when_openai_fails() -> None:
     )
     assert draft.status == "drafted"
     assert "Hej Aquasvea AB" in draft.body
+    assert draft.detail == "AI generation failed: OpenAI returned HTTP 500."
+
+
+def test_writer_explains_rejected_openai_key() -> None:
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(401)
+
+    writer = OutreachWriter(
+        Settings(openai_api_key="bad-key"),
+        client=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
+    draft = writer.write(
+        Company(organization_number="5560000001", name="Aquasvea AB"),
+        WebsiteProfile(url="https://aquasvea.se/"),
+        None,
+    )
+    assert draft.subject == "3d-scanning hos er"
+    assert draft.detail == (
+        "AI generation failed: OpenAI rejected OPENAI_API_KEY (HTTP 401)."
+    )

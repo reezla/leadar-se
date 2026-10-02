@@ -65,8 +65,14 @@ open them. The GitHub repo can stay private if you grant Streamlit access.
 2. Open [share.streamlit.io](https://share.streamlit.io) and sign in with GitHub.
 3. **Create app** → repository `reezla/leadar-se`, branch `main`, file `app.py`.
 4. Set Python to **3.11**.
-5. Add `SCB_API_KEY` later in the Cloud app secrets if you get a key.
-   Do not commit the key.
+5. Add root-level secrets in the Cloud app settings, then reboot the app:
+
+   ```toml
+   SCB_API_KEY = "..."
+   OPENAI_API_KEY = "sk-..."
+   ```
+
+   Do not commit either key.
 
 Run verification:
 

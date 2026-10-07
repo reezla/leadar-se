@@ -27,9 +27,7 @@ def search_companies(
     filters: CompanySearchFilters,
     segment: Segment,
 ) -> SearchResult:
-    filters = filters.model_copy(
-        update={"sni_prefixes": expand_sni_prefixes(filters.sni_prefixes)}
-    )
+    filters = filters.model_copy(update={"sni_prefixes": expand_sni_prefixes(filters.sni_prefixes)})
     fetched = provider.search(filters)
     matching = filter_companies(fetched, filters)
     ranked = rank_companies(matching, segment, filters)

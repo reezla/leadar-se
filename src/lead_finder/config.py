@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     website_search_provider: str = "google"
     google_search_url: str = "https://www.google.com/search"
     duckduckgo_search_url: str = "https://html.duckduckgo.com/html/"
+    duckduckgo_lite_url: str = "https://lite.duckduckgo.com/lite/"
     google_search_timeout_seconds: float = 20
     google_requests_per_window: int = 4
     google_rate_limit_window_seconds: float = 10

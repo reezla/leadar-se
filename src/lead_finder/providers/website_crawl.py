@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import re
-from urllib.parse import unquote, urljoin, urlparse
+from urllib.parse import urljoin, urlparse
 from urllib.robotparser import RobotFileParser
 
 import httpx
@@ -9,6 +8,7 @@ from bs4 import BeautifulSoup
 
 from lead_finder.config import Settings
 from lead_finder.models import WebsiteProfile
+from lead_finder.providers.email_extract import suggested_email
 from lead_finder.providers.google_search_parse import hostname
 from lead_finder.providers.rate_limit import SlidingWindowRateLimiter
 
@@ -16,8 +16,6 @@ CONTACT_HINTS = ("kontakta oss", "kontakta-oss", "kontakt")
 ABOUT_HINTS = ("om-oss", "omoss", "about-us", "about")
 PROJECT_HINTS = ("referens", "projekt", "project", "uppdrag", "pagaende", "pågående")
 PAGE_HINTS = (*CONTACT_HINTS, *ABOUT_HINTS, *PROJECT_HINTS)
-GENERIC_LOCAL_PARTS = {"info", "kontakt", "contact", "hello", "hej", "sales", "order"}
-EMAIL_RE = re.compile(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", re.I)
 TEXT_LIMIT = 4_000
 
 
@@ -55,7 +53,7 @@ class WebsiteCrawler:
         pages = [url]
         about = [visible_text(homepage)]
         projects: list[str] = []
-        recipient = generic_email(homepage)
+        recipient = suggested_email(homepage, page_url=url)
         for link in interesting_links(url, homepage):
             if len(pages) >= self.settings.website_crawl_max_pages:
                 break
@@ -63,7 +61,7 @@ class WebsiteCrawler:
             if html is None:
                 continue
             pages.append(link)
-            recipient = recipient or generic_email(html)
+            recipient = recipient or suggested_email(html, page_url=link)
             if _classify(link) == "contact":
                 continue
             text = visible_text(html)
@@ -143,18 +141,6 @@ def visible_text(html: str, limit: int = TEXT_LIMIT) -> str:
     return " ".join(soup.get_text(" ", strip=True).split())[:limit]
 
 
-def generic_email(html: str) -> str | None:
-    soup = BeautifulSoup(html, "html.parser")
-    for tag in soup.select('a[href^="mailto:"]'):
-        address = unquote(str(tag["href"]).split(":", 1)[-1]).split("?", 1)[0]
-        if _is_generic(address):
-            return address
-    for match in EMAIL_RE.findall(html):
-        if _is_generic(match):
-            return match
-    return None
-
-
 def _classify(url: str) -> str:
     path = urlparse(url).path.casefold()
     if any(hint in path for hint in CONTACT_HINTS):
@@ -164,11 +150,6 @@ def _classify(url: str) -> str:
     if any(hint in path for hint in ABOUT_HINTS):
         return "about"
     return "home"
-
-
-def _is_generic(address: str) -> bool:
-    local = address.split("@", 1)[0].casefold()
-    return local in GENERIC_LOCAL_PARTS
 
 
 def _join(parts: list[str]) -> str | None:

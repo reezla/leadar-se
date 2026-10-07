@@ -46,20 +46,7 @@ class ScbCompanyProvider:
         self.close()
 
     def search(self, filters: CompanySearchFilters) -> list[Company]:
-        api_key = (self.settings.scb_api_key or "").strip()
-        if not api_key:
-            raise ValueError("SCB_API_KEY is missing. Add it to .env and restart the app.")
-        self._api_key = api_key
-
-        counties = self._code_table("lankoder")
-        municipalities = self._code_table("kommunkoder")
-        if filters.sni_prefixes:
-            industry = self._code_table("naringsgrenkoder")
-            filters = filters.model_copy(
-                update={
-                    "sni_prefixes": expand_sni_prefixes(filters.sni_prefixes, industry)
-                }
-            )
+        filters, counties, municipalities = self._prepare(filters)
         collected: list[Company] = []
         seen: set[str] = set()
         for path in self._collection_paths(filters, counties, municipalities):
@@ -67,6 +54,22 @@ class ScbCompanyProvider:
             if filters.reached(len(collected)):
                 break
         return collected[: filters.limit]
+
+    def _prepare(
+        self, filters: CompanySearchFilters
+    ) -> tuple[CompanySearchFilters, Mapping[str, str], Mapping[str, str]]:
+        api_key = (self.settings.scb_api_key or "").strip()
+        if not api_key:
+            raise ValueError("SCB_API_KEY is missing. Add it to .env and restart the app.")
+        self._api_key = api_key
+        counties = self._code_table("lankoder")
+        municipalities = self._code_table("kommunkoder")
+        if filters.sni_prefixes:
+            industry = self._code_table("naringsgrenkoder")
+            filters = filters.model_copy(
+                update={"sni_prefixes": expand_sni_prefixes(filters.sni_prefixes, industry)}
+            )
+        return filters, counties, municipalities
 
     def _collection_paths(
         self,
@@ -135,18 +138,20 @@ class ScbCompanyProvider:
         response: httpx.Response | None = None
         for attempt in range(3):
             self.rate_limiter.wait()
-            response = self.client.get(
-                self._url(path),
-                params=params,
-                headers={"Accept": "application/json", "X-API-Key": self._api_key},
-            )
-            if response.status_code == 429 and attempt < 2:
+            try:
+                response = self.client.get(
+                    self._url(path),
+                    params=params,
+                    headers={"Accept": "application/json", "X-API-Key": self._api_key},
+                )
+            except httpx.RequestError as error:
+                raise ValueError(f"SCB did not respond: {error}") from error
+            if response.status_code == 429 and attempt < 2 and _retryable(response):
                 time.sleep(_retry_after(response))
                 continue
             break
-        if response is None or response.status_code == 401:
-            raise ValueError("SCB rejected SCB_API_KEY (HTTP 401).")
-        response.raise_for_status()
+        if response is None or response.is_error:
+            raise _api_failure(response)
         return response.json()
 
     def _code_table(self, name: str) -> dict[str, str]:
@@ -194,6 +199,34 @@ def _next_cursor(payload: Mapping[str, Any], seen_cursors: set[int]) -> int | No
     if not isinstance(cursor, int) or cursor in seen_cursors:
         return None
     return cursor
+
+
+def _api_failure(response: httpx.Response | None) -> ValueError:
+    if response is None:
+        return ValueError("SCB did not respond.")
+    detail = _api_detail(response)
+    if detail:
+        return ValueError(f"HTTP {response.status_code}: {detail}")
+    return ValueError(f"SCB returned HTTP {response.status_code}.")
+
+
+def _api_detail(response: httpx.Response) -> str:
+    try:
+        payload = response.json()
+    except ValueError:
+        return " ".join(response.text.split())[:240]
+    if isinstance(payload, Mapping):
+        for key in ("detail", "title"):
+            value = payload.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    return ""
+
+
+def _retryable(response: httpx.Response) -> bool:
+    if "blocked" in _api_detail(response).casefold():
+        return False
+    return _retry_after(response) <= 2
 
 
 def _retry_after(response: httpx.Response) -> float:

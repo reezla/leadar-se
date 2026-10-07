@@ -335,3 +335,27 @@ def test_provider_maps_architect_71111_to_scb_71110() -> None:
         if "/juridiskaenheter/naringsgren/" in request.url.path
     ]
     assert [request.url.path.rsplit("/", 1)[-1] for request in industry_calls] == ["71110"]
+
+
+def test_blocked_key_raises_the_api_detail() -> None:
+    calls = 0
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return httpx.Response(
+            429,
+            json={
+                "title": "Too Many Requests",
+                "status": 429,
+                "detail": "API key temporarily blocked until 2026-10-02 13:14:12Z.",
+            },
+        )
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    settings = Settings(scb_api_url="https://scb.example", scb_api_key="test-key")
+    provider = ScbCompanyProvider(settings, client=client, rate_limiter=NoOpRateLimiter())
+
+    with pytest.raises(ValueError, match="temporarily blocked until 2026-10-02 13:14:12Z"):
+        provider.search(CompanySearchFilters(sni_prefixes=["71121"]))
+    assert calls == 1

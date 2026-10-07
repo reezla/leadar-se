@@ -138,11 +138,7 @@ def _apply_edits(
         changed = True
         updated.append(
             scored.model_copy(
-                update={
-                    "outreach": draft.model_copy(
-                        update={"subject": subject, "body": body}
-                    )
-                }
+                update={"outreach": draft.model_copy(update={"subject": subject, "body": body})}
             )
         )
     if not changed:

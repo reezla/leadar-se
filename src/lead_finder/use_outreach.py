@@ -1,19 +1,17 @@
 from __future__ import annotations
 
-import json
 from collections.abc import Callable
 
 from lead_finder.config import Settings, get_settings
 from lead_finder.matching import match_company
 from lead_finder.matching_catalog import MatchingCatalog, load_matching_catalog
-from lead_finder.models import OutreachDraft, ScoredCompany, WebsiteProfile
+from lead_finder.models import OutreachDraft, ScoredCompany
 from lead_finder.outreach_sender import normalize_sender
 from lead_finder.outreach_write import OutreachWriter
-from lead_finder.providers.website_crawl import WebsiteCrawler
-from lead_finder.providers.website_search import WebsiteFinder, build_website_finder
 from lead_finder.use_company_search import SearchResult
 
 ProgressCallback = Callable[[int, int, str], None]
+NoticeCallback = Callable[[str], None]
 
 
 def resolve_outreach_selection(
@@ -34,27 +32,16 @@ def generate_outreach(
     selected_org_numbers: list[str],
     *,
     settings: Settings | None = None,
-    finder: WebsiteFinder | None = None,
-    crawler: WebsiteCrawler | None = None,
     writer: OutreachWriter | None = None,
     catalog: MatchingCatalog | None = None,
     sender: str = "norrpoint",
     on_progress: ProgressCallback | None = None,
+    on_notice: NoticeCallback | None = None,
 ) -> SearchResult:
     settings = settings or get_settings()
     sender = normalize_sender(sender)
-    owned: list[object] = []
-    if finder is None:
-        finder = build_website_finder(settings)
-        owned.append(finder)
-    if crawler is None:
-        shared = getattr(finder, "client", None)
-        crawler = WebsiteCrawler(settings, client=shared)
-        if shared is None:
-            owned.append(crawler)
-    if writer is None:
-        writer = OutreachWriter(settings)
-        owned.append(writer)
+    owns_writer = writer is None
+    writer = writer or OutreachWriter(settings)
     catalog = catalog or load_matching_catalog()
     selected = list(dict.fromkeys(selected_org_numbers))[: settings.outreach_max_selected]
     selected_set = set(selected)
@@ -67,101 +54,62 @@ def generate_outreach(
                 continue
             done += 1
             updated.append(
-                _process_company(
+                _draft_company(
                     scored,
-                    finder,
-                    crawler,
                     writer,
                     catalog,
                     sender=sender,
                     on_progress=on_progress,
+                    on_notice=on_notice,
                     done=done,
                     total=total,
                 )
             )
         return SearchResult(companies=updated, summary=result.summary)
     finally:
-        for item in owned:
-            close = getattr(item, "close", None)
-            if callable(close):
-                close()
+        if owns_writer:
+            writer.close()
 
 
-def _process_company(
+def _draft_company(
     scored: ScoredCompany,
-    finder: WebsiteFinder,
-    crawler: WebsiteCrawler,
     writer: OutreachWriter,
     catalog: MatchingCatalog,
     *,
     sender: str,
     on_progress: ProgressCallback | None,
+    on_notice: NoticeCallback | None,
     done: int,
     total: int,
 ) -> ScoredCompany:
     company = scored.company
-    source = "existing_domain" if company.domain else "google"
-    _notify(on_progress, done - 1, total, f"{company.name}: finding website...")
-    try:
-        url = finder.find_website(company)
-    except Exception as error:
+    if scored.crawl_status is None:
+        _notify(on_progress, done, total, f"{company.name}: crawl first")
+        return scored
+    profile = scored.website
+    if profile is None or not profile.url:
+        _notify(on_progress, done, total, f"{company.name}: no website")
         return scored.model_copy(
             update={
                 "outreach": OutreachDraft(
                     status="no_website",
-                    detail=str(error)[:300],
+                    detail=scored.crawl_detail or "No official website found.",
                 )
             }
         )
-    if not url:
-        return scored.model_copy(
-            update={
-                "outreach": OutreachDraft(
-                    status="no_website",
-                    detail="No official website found.",
-                )
-            }
-        )
-    company = company.model_copy(update={"domain": url})
-    _notify(on_progress, done - 1, total, f"{company.name}: crawling {url}...")
-    detail = ""
-    try:
-        profile = crawler.crawl(url, source=source)
-    except Exception as error:
-        profile = WebsiteProfile(url=url, source=source)
-        detail = f"crawl_failed: {error}"[:300]
-    _log_website_crawl(company.name, profile, crawl_detail=detail)
-    match = scored.product_match or match_company(company, catalog)
     _notify(on_progress, done - 1, total, f"{company.name}: drafting email...")
+    match = scored.product_match or match_company(company, catalog)
     outreach = writer.write(company, profile, match, sender)
-    if detail:
-        outreach = outreach.model_copy(update={"detail": detail})
+    ai_detail = outreach.detail if outreach.detail.startswith("AI generation") else ""
+    if scored.crawl_detail and not ai_detail:
+        outreach = outreach.model_copy(update={"detail": scored.crawl_detail})
+    if ai_detail and on_notice is not None:
+        on_notice(ai_detail)
     _notify(on_progress, done, total, f"{company.name}: done")
-    return scored.model_copy(
-        update={"company": company, "product_match": match, "outreach": outreach}
-    )
+    return scored.model_copy(update={"product_match": match, "outreach": outreach})
 
 
 def _notify(on_progress: ProgressCallback | None, done: int, total: int, message: str) -> None:
     if on_progress is None:
         return
     on_progress(done, max(total, 1), message)
-
-
-def _log_website_crawl(
-    company_name: str,
-    profile: WebsiteProfile,
-    *,
-    crawl_detail: str = "",
-) -> None:
-    payload: dict[str, object] = {
-        "company": company_name,
-        "website": profile.model_dump(mode="json"),
-    }
-    if crawl_detail:
-        payload["crawl_detail"] = crawl_detail
-    print(
-        "Website crawl result:",
-        json.dumps(payload, indent=2, ensure_ascii=False, default=str),
-        flush=True,
-    )

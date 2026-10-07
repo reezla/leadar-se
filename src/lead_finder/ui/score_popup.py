@@ -49,9 +49,7 @@ def _clear_cells(widget_key: str) -> None:
         payload = state.get("selection")
     rows = _selection_values(payload, "rows")
     columns = _selection_values(payload, "columns")
-    st.session_state[widget_key] = {
-        "selection": {"rows": rows, "columns": columns, "cells": []}
-    }
+    st.session_state[widget_key] = {"selection": {"rows": rows, "columns": columns, "cells": []}}
 
 
 def _selection_values(payload: Any, key: str) -> list[Any]:

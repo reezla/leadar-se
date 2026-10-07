@@ -8,11 +8,31 @@ from lead_finder.exporters import export_hubspot_csv, export_leads_json
 from lead_finder.models import ScoredCompany
 
 
-def render_export_bar(companies: list[ScoredCompany], *, download_name: str) -> None:
+def render_export_bar(
+    companies: list[ScoredCompany],
+    *,
+    selected: list[ScoredCompany],
+    download_name: str,
+) -> None:
+    if not selected:
+        _export_menu("Export all", companies, download_name=download_name)
+        return
+    all_column, selected_column, _spacer = st.columns([1.2, 1.4, 3])
+    with all_column:
+        _export_menu("Export all", companies, download_name=download_name)
+    with selected_column:
+        _export_menu(
+            "Export selected",
+            selected,
+            download_name=_selected_name(download_name),
+        )
+
+
+def _export_menu(label: str, companies: list[ScoredCompany], *, download_name: str) -> None:
     disabled = not companies
     json_name = Path(download_name).with_suffix(".json").name
     with st.popover(
-        "Export",
+        label,
         icon=":material/download:",
         disabled=disabled,
         key=f"export_menu_{download_name}",
@@ -37,3 +57,8 @@ def render_export_bar(companies: list[ScoredCompany], *, download_name: str) -> 
             icon=":material/data_object:",
             key=f"download_json_{json_name}",
         )
+
+
+def _selected_name(download_name: str) -> str:
+    path = Path(download_name)
+    return f"{path.stem}-selected{path.suffix}"

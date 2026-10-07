@@ -28,9 +28,7 @@ def match_company(
 
 def _haystack(company: Company) -> str:
     return " ".join(
-        part
-        for part in (company.name, company.activity_description, company.domain)
-        if part
+        part for part in (company.name, company.activity_description, company.domain) if part
     ).casefold()
 
 

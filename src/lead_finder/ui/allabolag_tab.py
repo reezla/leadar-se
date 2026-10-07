@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 import streamlit as st
 
 from lead_finder.config import get_settings, load_segments
@@ -7,6 +9,8 @@ from lead_finder.models import CompanySearchFilters
 from lead_finder.providers.allabolag_parse import build_query, build_search_url
 from lead_finder.ui.results import render_results
 from lead_finder.use_allabolag_crawl import crawl_allabolag
+
+logger = logging.getLogger(__name__)
 
 
 def render_allabolag_tab(segment_key: str, filters: CompanySearchFilters) -> None:
@@ -50,7 +54,10 @@ def render_allabolag_tab(segment_key: str, filters: CompanySearchFilters) -> Non
             )
             progress.progress(1.0, text="Crawl finished")
         except Exception as error:
-            st.error(f"Allabolag crawl failed: {error}")
+            logger.exception("Allabolag crawl failed")
+            message = f"Allabolag crawl failed: {error}"
+            st.toast(message, icon=":material/warning:", duration="long")
+            st.error(message)
 
     result = st.session_state.get("allabolag_result")
     if result and result.companies:

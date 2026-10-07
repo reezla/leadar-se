@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import json
-from typing import Any
+import logging
 
 import streamlit as st
 
@@ -9,7 +8,9 @@ from lead_finder.config import get_settings, load_segments
 from lead_finder.models import CompanySearchFilters
 from lead_finder.providers import ScbCompanyProvider
 from lead_finder.ui.results import render_results
-from lead_finder.use_company_search import SearchResult, search_companies
+from lead_finder.use_company_search import search_companies
+
+logger = logging.getLogger(__name__)
 
 
 def render_scb_tab(segment_key: str, filters: CompanySearchFilters) -> None:
@@ -36,7 +37,10 @@ def render_scb_tab(segment_key: str, filters: CompanySearchFilters) -> None:
                     int(st.session_state.get("search_result_nonce") or 0) + 1
                 )
         except Exception as error:
-            st.error(f"SCB search failed: {error}")
+            logger.exception("SCB search failed")
+            message = f"SCB search failed: {error}"
+            st.toast(message, icon=":material/warning:", duration="long")
+            st.error(message)
 
     result = st.session_state.get("search_result")
     if result and result.companies:
@@ -47,4 +51,3 @@ def render_scb_tab(segment_key: str, filters: CompanySearchFilters) -> None:
         )
     elif result:
         st.warning("No companies matched these filters. Add SNI prefixes or widen the search.")
-

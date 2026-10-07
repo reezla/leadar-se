@@ -3,7 +3,7 @@ from __future__ import annotations
 from lead_finder.config import Settings, get_settings
 from lead_finder.matching import match_company
 from lead_finder.matching_catalog import MatchingCatalog, load_matching_catalog
-from lead_finder.models import ScoredCompany, WebsiteProfile
+from lead_finder.models import ScoredCompany
 from lead_finder.outreach_sender import normalize_sender
 from lead_finder.outreach_write import OutreachWriter
 from lead_finder.use_company_search import SearchResult
@@ -44,11 +44,7 @@ def _rewrite(
     draft = scored.outreach
     if scored.company.organization_number != organization_number or draft is None:
         return scored
-    profile = (
-        WebsiteProfile.model_validate(draft.website.model_dump(mode="json"))
-        if draft.website is not None
-        else None
-    )
+    profile = scored.website or draft.website
     if profile is None or not profile.url:
         return scored.model_copy(
             update={
@@ -59,6 +55,4 @@ def _rewrite(
         )
     match = scored.product_match or match_company(scored.company, catalog)
     outreach = writer.write(scored.company, profile, match, sender, previous=draft.body)
-    return scored.model_copy(
-        update={"product_match": match, "outreach": outreach}
-    )
+    return scored.model_copy(update={"product_match": match, "outreach": outreach})

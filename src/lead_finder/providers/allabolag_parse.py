@@ -43,8 +43,7 @@ def build_query(
     query: dict[str, str] = {"sort": sort, "page": str(page)}
     if filters.sni_prefixes:
         query["naceIndustry"] = ",".join(
-            format_nace_industry(prefix)
-            for prefix in resolve_industry_codes(filters.sni_prefixes)
+            format_nace_industry(prefix) for prefix in resolve_industry_codes(filters.sni_prefixes)
         )
     locations = [*filters.municipalities, *filters.counties]
     if locations:

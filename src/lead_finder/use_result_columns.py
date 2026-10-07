@@ -22,9 +22,7 @@ def merge_column_order(
     if stored is None:
         return list(available), list(available)
     kept = [name for name in stored if name in available]
-    newcomers = [
-        name for name in available if name not in (known or []) and name not in kept
-    ]
+    newcomers = [name for name in available if name not in (known or []) and name not in kept]
     return [*kept, *newcomers], list(available)
 
 

@@ -6,7 +6,7 @@ SEGMENT_COLUMNS = [5, 5]
 PREFIX_COLUMNS = [5, 5]
 FILTER_PAIR_COLUMNS = [3, 3, 4]
 FILTER_SINGLE_COLUMNS = [3, 7]
-OUTREACH_COLUMNS = [2.2, 1.2, 6.6]
+OUTREACH_COLUMNS = [2.4, 2.8, 1.0, 3.8]
 
 
 def inject_layout_styles() -> None:
@@ -116,6 +116,40 @@ def inject_layout_styles() -> None:
           color: #d32f2f !important;
           background: rgba(211, 47, 47, 0.1) !important;
         }
+        [class*="st-key-select_cluster_"] {
+          width: max-content !important;
+          max-width: 100% !important;
+          justify-content: flex-start !important;
+          align-items: center !important;
+          gap: 0.45rem !important;
+        }
+        [class*="st-key-select_cluster_"] [class*="st-key-select_more_"],
+        [class*="st-key-select_cluster_"] [class*="st-key-crawl_filter_"],
+        [class*="st-key-select_cluster_"] [class*="st-key-mark_next_"] {
+          flex: 0 0 auto !important;
+          width: auto !important;
+        }
+        [class*="st-key-select_cluster_"] [class*="st-key-mark_next_"] {
+          margin-right: calc(1.5rem - 0.45rem) !important;
+        }
+        [class*="st-key-mark_next_"] [data-testid="stText"] {
+          white-space: nowrap;
+        }
+        [data-testid="stElementContainer"][class*="st-key-table_order_"],
+        [data-testid="stElementContainer"]:has([id^="table-order-bridge"]) {
+          position: absolute !important;
+          width: 1px !important;
+          height: 1px !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+          clip: rect(0, 0, 0, 0) !important;
+          opacity: 0 !important;
+        }
+        [class*="st-key-select_more_"] button {
+          width: auto !important;
+          min-width: 3rem;
+        }
         [class*="st-key-restore_cols_"] button {
           min-height: 1.35rem !important;
           height: auto !important;
@@ -125,6 +159,15 @@ def inject_layout_styles() -> None:
           box-shadow: none !important;
           font-size: 0.8rem !important;
           cursor: pointer;
+        }
+        [data-testid="stToastContainer"] {
+          position: fixed !important;
+          top: auto !important;
+          right: auto !important;
+          bottom: 1.5rem !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          width: min(32rem, calc(100vw - 2rem));
         }
         </style>
         """,

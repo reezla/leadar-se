@@ -25,9 +25,7 @@ def render_filters() -> tuple[str, CompanySearchFilters]:
     with county_column:
         counties = st.text_input("Counties (optional)", placeholder="Västra Götaland, Skåne")
     with municipality_column:
-        municipalities = st.text_input(
-            "Municipalities (optional)", placeholder="Göteborg, Malmö"
-        )
+        municipalities = st.text_input("Municipalities (optional)", placeholder="Göteborg, Malmö")
 
     employee_min_column, employee_max_column, _employee_spacer = st.columns(FILTER_PAIR_COLUMNS)
     with employee_min_column:
@@ -49,13 +47,9 @@ def render_filters() -> tuple[str, CompanySearchFilters]:
 
     revenue_min_column, revenue_max_column, _revenue_spacer = st.columns(FILTER_PAIR_COLUMNS)
     with revenue_min_column:
-        revenue_min_msek = st.number_input(
-            "Revenue Min (MSEK)", min_value=0, value=0, step=1
-        )
+        revenue_min_msek = st.number_input("Revenue Min (MSEK)", min_value=0, value=0, step=1)
     with revenue_max_column:
-        revenue_max_msek = st.number_input(
-            "Revenue Max (MSEK)", min_value=0, value=0, step=1
-        )
+        revenue_max_msek = st.number_input("Revenue Max (MSEK)", min_value=0, value=0, step=1)
 
     query_column, _query_spacer = st.columns(FILTER_SINGLE_COLUMNS)
     with query_column:

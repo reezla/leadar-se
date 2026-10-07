@@ -72,3 +72,37 @@ def test_kontakt_page_is_checked_for_a_generic_email() -> None:
     profile = crawler.crawl("https://arkitema.se/")
     assert profile.suggested_recipient == "info@arkitema.com"
     assert "https://arkitema.se/kontakt" in profile.pages_fetched
+
+
+def test_kontakt_page_fornamn_template_becomes_a_first_name_address() -> None:
+    home = """
+    <html><body>
+      <a href="/kontakta-oss-2/">Kontakta oss</a>
+    </body></html>
+    """
+    contact = """
+    <html><body>
+      <h3>Adesso Bygg AB</h3>
+      <h4>Roger Andersen</h4>
+      <p>E.post: förnamn@adessobygg.se</p>
+      <h4>Nic Larson</h4>
+      <p>E.post: förnamn@adessobygg.se</p>
+    </body></html>
+    """
+    pages = {"/": home, "/kontakta-oss-2/": contact}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("robots.txt"):
+            return httpx.Response(404)
+        html = pages.get(request.url.path)
+        if html is None:
+            return httpx.Response(404)
+        return httpx.Response(200, text=html)
+
+    crawler = WebsiteCrawler(
+        Settings(website_crawl_max_pages=2, website_crawl_requests_per_window=100),
+        client=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
+    profile = crawler.crawl("https://www.adessobygg.se/")
+    assert profile.suggested_recipient == "roger@adessobygg.se"
+    assert "https://www.adessobygg.se/kontakta-oss-2/" in profile.pages_fetched

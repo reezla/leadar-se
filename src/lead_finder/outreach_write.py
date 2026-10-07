@@ -65,9 +65,7 @@ class OutreachWriter:
                 {"role": "system", "content": system_prompt(sender)},
                 {
                     "role": "user",
-                    "content": user_prompt(
-                        company, profile, match, sender, previous=previous
-                    ),
+                    "content": user_prompt(company, profile, match, sender, previous=previous),
                 },
             ],
             "response_format": {"type": "json_object"},
@@ -112,8 +110,7 @@ def template_draft(
             "är det fäste och offset som avgör."
         )
         offer = (
-            "Metricop tar fram prismor, fästen och SMR "
-            "som passar instrumenten ni redan använder."
+            "Metricop tar fram prismor, fästen och SMR som passar instrumenten ni redan använder."
         )
         ask = "Skicka modell eller artikelnummer så kollar vi passform."
     else:
@@ -122,12 +119,7 @@ def template_draft(
         offer = "Norrpoints handhållna LiDAR är till för just det, med hög precision."
         ask = "Vore det värt att jämföra mot hur ni mäter inomhus idag?"
     body = (
-        f"Hej {company.name},\n\n"
-        f"{observed}"
-        f"{job}\n\n"
-        f"{offer}\n\n"
-        f"{ask}\n\n"
-        f"Vänliga hälsningar\n{brand}"
+        f"Hej {company.name},\n\n{observed}{job}\n\n{offer}\n\n{ask}\n\nVänliga hälsningar\n{brand}"
     )
     return OutreachDraft(
         subject=subject,

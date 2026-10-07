@@ -31,11 +31,7 @@ def render_column_hide_controls(
     last_column = len(order) <= 1
     for slot, name in zip(slots[1:], order, strict=True):
         with slot:
-            help_text = (
-                "At least one column must stay visible."
-                if last_column
-                else f"Hide {name}"
-            )
+            help_text = "At least one column must stay visible." if last_column else f"Hide {name}"
             if st.button(
                 "×",
                 key=_hide_key(state_key, name),
@@ -69,6 +65,7 @@ _CHECKBOX_SLOT = 0.38
 _COLUMN_WIDTHS = {
     "Score": 0.55,
     "Company": 1.8,
+    "Analyzed": 0.7,
     "Website": 1.5,
     "Email": 1.3,
     "Email body": 1.5,

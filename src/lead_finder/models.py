@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, computed_field, field_validator
 
 
 class Company(BaseModel):
@@ -105,4 +105,12 @@ class ScoredCompany(BaseModel):
     reasons: list[ScoreReason]
     missing_data: list[str] = Field(default_factory=list)
     product_match: ProductMatch | None = None
+    website: WebsiteProfile | None = None
+    crawl_status: str | None = None
+    crawl_detail: str = ""
     outreach: OutreachDraft | None = None
+
+    @computed_field
+    @property
+    def crawled(self) -> bool:
+        return self.crawl_status == "crawled"

@@ -6,9 +6,7 @@ from lead_finder.config import Segment
 from lead_finder.models import Company, CompanySearchFilters, ScoredCompany, ScoreReason
 
 
-def filter_companies(
-    companies: list[Company], filters: CompanySearchFilters
-) -> list[Company]:
+def filter_companies(companies: list[Company], filters: CompanySearchFilters) -> list[Company]:
     return [company for company in companies if _matches(company, filters)]
 
 
@@ -56,9 +54,7 @@ def score_company(
         )
 
     if _in_selected_geography(company, filters):
-        reasons.append(
-            ScoreReason(label="Matches selected geography", points=weights["geography"])
-        )
+        reasons.append(ScoreReason(label="Matches selected geography", points=weights["geography"]))
 
     current_time = now or datetime.now(UTC)
     retrieved_at = company.retrieved_at
@@ -138,9 +134,7 @@ def _range_overlaps(
         return True
     if selected_min is not None and company_max is not None and company_max < selected_min:
         return False
-    return not (
-        selected_max is not None and company_min is not None and company_min > selected_max
-    )
+    return not (selected_max is not None and company_min is not None and company_min > selected_max)
 
 
 def _has_operational_size(company: Company) -> bool:

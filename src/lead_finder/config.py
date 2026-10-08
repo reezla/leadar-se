@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o-mini"
     openai_api_url: str = "https://api.openai.com/v1/chat/completions"
     website_search_provider: str = "google"
+    serper_api_key: str | None = None
+    serper_search_url: str = "https://google.serper.dev/search"
+    serper_timeout_seconds: float = 60
     google_search_url: str = "https://www.google.com/search"
     duckduckgo_search_url: str = "https://html.duckduckgo.com/html/"
     duckduckgo_lite_url: str = "https://lite.duckduckgo.com/lite/"

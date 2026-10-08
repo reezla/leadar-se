@@ -8,7 +8,7 @@ from lead_finder.config import Settings
 from lead_finder.models import Company, OutreachDraft, ProductMatch, WebsiteProfile
 from lead_finder.outreach_parse import parse_openai_content
 from lead_finder.outreach_prompt import user_prompt
-from lead_finder.outreach_sender import sender_label, system_prompt
+from lead_finder.outreach_sender import attach_norrpoint_close, sender_label, system_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +81,8 @@ class OutreachWriter:
         subject, body, fit, reason = parse_openai_content(
             response.json()["choices"][0]["message"]["content"]
         )
+        if sender_label(sender) == "Norrpoint":
+            body = attach_norrpoint_close(body)
         return OutreachDraft(
             subject=subject,
             body=body,
@@ -117,9 +119,18 @@ def template_draft(
         subject = "3d-scanning hos er"
         job = "På den sortens hus tar trånga utrymmen tid med stativ."
         offer = "Norrpoints handhållna LiDAR är till för just det, med hög precision."
-        ask = "Vore det värt att jämföra mot hur ni mäter inomhus idag?"
+        body = attach_norrpoint_close(f"Hej {company.name},\n\n{observed}{job}\n\n{offer}")
+        return OutreachDraft(
+            subject=subject,
+            body=body,
+            status="drafted",
+            detail=detail,
+            suggested_recipient=profile.suggested_recipient,
+            website=profile,
+        )
     body = (
-        f"Hej {company.name},\n\n{observed}{job}\n\n{offer}\n\n{ask}\n\nVänliga hälsningar\n{brand}"
+        f"Hej {company.name},\n\n{observed}{job}\n\n{offer}\n\n{ask}\n\n"
+        f"Vänliga hälsningar\n{brand}"
     )
     return OutreachDraft(
         subject=subject,

@@ -5,7 +5,7 @@ import httpx
 from lead_finder.config import Settings
 from lead_finder.models import Company, ProductMatch, WebsiteProfile
 from lead_finder.outreach_prompt import spoken_company_name, user_prompt
-from lead_finder.outreach_sender import system_prompt
+from lead_finder.outreach_sender import attach_norrpoint_close, system_prompt
 from lead_finder.outreach_write import OutreachWriter
 
 
@@ -112,6 +112,9 @@ def test_norrpoint_prompt_is_the_official_file() -> None:
     assert "without AB" in prompt
     assert "No about/project text extracted" in prompt
     assert "general measurement tasks" in prompt
+    assert "Använder ni LiDAR-scanners idag i ert arbete" in prompt
+    assert "Boris Petrović" in prompt
+    assert "Do not write a signature." in prompt
 
 
 def test_norrpoint_writer_sends_the_file_and_parses_fit() -> None:
@@ -147,7 +150,10 @@ def test_norrpoint_writer_sends_the_file_and_parses_fit() -> None:
     assert sent["response_format"] == {"type": "json_object"}
     assert sent["messages"][0]["content"].startswith("You are an expert B2B cold-email writer")
     assert "Norra Tornen" in sent["messages"][1]["content"]
-    assert draft.body == payload["body"]
+    assert draft.body.startswith("Hej,\n\nNorra Tornen är ett befintligt hus.")
+    assert "Boris Petrović" in draft.body
+    assert draft.body.count("Vänliga hälsningar") == 1
+    assert draft.body.endswith("www.norrpoint.se")
     assert draft.subject == "norra tornen"
     assert draft.customer_fit == "moderate"
 
@@ -158,6 +164,21 @@ def test_metricop_system_prompt_is_accessories_not_software() -> None:
     assert "compatibility" in prompt
     assert "field software" not in prompt.casefold()
     assert "customer_fit" in prompt
+
+
+def test_attach_norrpoint_close_replaces_a_model_signoff() -> None:
+    body = (
+        "Hej,\n\n"
+        "Jag såg att ni på Optima Engineering varit engagerade i BAG Kristinehed.\n\n"
+        "Vi på Norrpoint arbetar med handhållna LiDAR-scanners.\n\n"
+        "Vänliga hälsningar,\nNorrpoint"
+    )
+    done = attach_norrpoint_close(body)
+    assert "BAG Kristinehed" in done
+    assert done.count("Vänliga hälsningar") == 1
+    assert "Boris Petrović" in done
+    assert "info@norrpoint.se" in done
+    assert "Co-founder | Norrpoint" in done
 
 
 def test_spoken_company_name_strips_legal_form() -> None:

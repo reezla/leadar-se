@@ -24,6 +24,27 @@ def result_columns(
     return [*columns, *trailing]
 
 
+def crawled_table(
+    companies: list[ScoredCompany],
+) -> tuple[list[dict[str, object]], list[str]]:
+    include_match = any(item.product_match is not None for item in companies)
+    rows = [
+        result_row(
+            item,
+            include_match=include_match,
+            include_crawl=True,
+            include_outreach=False,
+        )
+        for item in companies
+    ]
+    columns = result_columns(
+        include_match=include_match,
+        include_crawl=True,
+        include_outreach=False,
+    )
+    return rows, columns
+
+
 def result_row(
     scored: ScoredCompany,
     *,

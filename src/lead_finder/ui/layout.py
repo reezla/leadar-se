@@ -6,7 +6,6 @@ SEGMENT_COLUMNS = [5, 5]
 PREFIX_COLUMNS = [5, 5]
 FILTER_PAIR_COLUMNS = [3, 3, 4]
 FILTER_SINGLE_COLUMNS = [3, 7]
-OUTREACH_COLUMNS = [2.4, 2.8, 1.0, 3.8]
 
 
 def inject_layout_styles() -> None:

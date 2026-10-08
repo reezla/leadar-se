@@ -10,12 +10,29 @@ if _SRC.exists() and str(_SRC) not in sys.path:
 import streamlit as st  # noqa: E402
 
 from lead_finder.ui import render_allabolag_tab, render_filters, render_scb_tab  # noqa: E402
+from lead_finder.ui.email_page import render_email_page  # noqa: E402
 from lead_finder.ui.layout import inject_layout_styles  # noqa: E402
 
 
 def main() -> None:
     st.set_page_config(page_title="Swedish LiDAR Lead Finder", layout="wide")
     inject_layout_styles()
+    search = st.Page(
+        _search_page,
+        title="Find companies",
+        icon=":material/search:",
+        default=True,
+    )
+    emails = st.Page(
+        render_email_page,
+        title="Write emails",
+        icon=":material/mail:",
+        url_path="emails",
+    )
+    st.navigation([search, emails], position="top").run()
+
+
+def _search_page() -> None:
     st.title("Swedish LiDAR Lead Finder")
     st.write(
         "Find and rank Swedish companies likely to benefit from handheld LiDAR scanning."

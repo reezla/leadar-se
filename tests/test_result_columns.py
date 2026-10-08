@@ -1,6 +1,6 @@
 from lead_finder.models import Company, OutreachDraft, ScoredCompany, ScoreReason, WebsiteProfile
 from lead_finder.ui.column_hide import hide_slot_weights
-from lead_finder.ui.result_rows import score_explanation
+from lead_finder.ui.result_rows import crawled_table, score_explanation
 from lead_finder.ui.results import _columns, _row
 from lead_finder.use_result_columns import hide_column, merge_column_order
 
@@ -121,6 +121,20 @@ def test_crawl_row_includes_about_and_projects() -> None:
     assert row["Analyzed"] == "Yes"
     assert scored.crawled is True
     assert list(row) == _columns(include_match=False, include_crawl=True)
+
+
+def test_crawled_table_matches_the_find_companies_crawl_columns() -> None:
+    scored = ScoredCompany(
+        company=Company(organization_number="5561234567", name="Aquasvea AB"),
+        score=40,
+        reasons=[ScoreReason(label="Relevant SNI", points=40)],
+        website=WebsiteProfile(url="https://aquasvea.se/", about_text="VA-projekt"),
+        crawl_status="crawled",
+    )
+    rows, columns = crawled_table([scored])
+    assert columns == _columns(include_match=False, include_crawl=True)
+    assert rows[0]["About"] == "VA-projekt"
+    assert "Status" not in rows[0]
 
 
 def test_score_cell_is_the_number_only() -> None:

@@ -39,13 +39,13 @@ def render_results(
     if crawled:
         st.caption(f"Website data gathered for {crawled} companies.")
     if drafted:
-        st.caption(f"Outreach drafted for {drafted} companies.")
+        st.caption(f"Outreach drafted for {drafted} companies. Review them on Write emails.")
 
     include_match = matched > 0
     include_crawl = crawled > 0 or any(
         website_profile(scored) is not None for scored in result.companies
     )
-    include_outreach = drafted > 0
+    include_outreach = False
     rows = [
         result_row(
             scored,

@@ -5,7 +5,7 @@ from collections.abc import Callable
 from lead_finder.config import Settings, get_settings
 from lead_finder.matching import match_company
 from lead_finder.matching_catalog import MatchingCatalog, load_matching_catalog
-from lead_finder.models import OutreachDraft, ScoredCompany
+from lead_finder.models import ScoredCompany, WebsiteProfile
 from lead_finder.outreach_sender import normalize_sender
 from lead_finder.outreach_write import OutreachWriter
 from lead_finder.use_company_search import SearchResult
@@ -83,20 +83,7 @@ def _draft_company(
     total: int,
 ) -> ScoredCompany:
     company = scored.company
-    if scored.crawl_status is None:
-        _notify(on_progress, done, total, f"{company.name}: crawl first")
-        return scored
-    profile = scored.website
-    if profile is None or not profile.url:
-        _notify(on_progress, done, total, f"{company.name}: no website")
-        return scored.model_copy(
-            update={
-                "outreach": OutreachDraft(
-                    status="no_website",
-                    detail=scored.crawl_detail or "No official website found.",
-                )
-            }
-        )
+    profile = _profile_for_draft(scored)
     _notify(on_progress, done - 1, total, f"{company.name}: drafting email...")
     match = scored.product_match or match_company(company, catalog)
     outreach = writer.write(company, profile, match, sender)
@@ -107,6 +94,13 @@ def _draft_company(
         on_notice(ai_detail)
     _notify(on_progress, done, total, f"{company.name}: done")
     return scored.model_copy(update={"product_match": match, "outreach": outreach})
+
+
+def _profile_for_draft(scored: ScoredCompany) -> WebsiteProfile:
+    profile = scored.website
+    if profile is not None and profile.url:
+        return profile
+    return WebsiteProfile(url=scored.company.domain or "")
 
 
 def _notify(on_progress: ProgressCallback | None, done: int, total: int, message: str) -> None:

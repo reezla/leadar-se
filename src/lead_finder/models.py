@@ -67,6 +67,32 @@ class ProductMatch(BaseModel):
     status: str = "needs_review"
 
 
+class ProductPick(BaseModel):
+    product: str
+    reason: str = ""
+
+
+class CompanyAnalysis(BaseModel):
+    """What the post-crawl analysis concluded about one company."""
+
+    recommended_product: str | None = None
+    alternatives: list[ProductPick] = Field(default_factory=list)
+    reason: str = ""
+    buyer_type: str = "unknown"
+    customer_fit: str = ""
+    customer_fit_reason: str = ""
+    already_scans: bool = False
+    evidence: list[str] = Field(default_factory=list)
+    outreach_angle: str = ""
+    source: str = "rules"
+    analyzed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    def products(self) -> list[str]:
+        names = [self.recommended_product] if self.recommended_product else []
+        names.extend(pick.product for pick in self.alternatives)
+        return list(dict.fromkeys(names))
+
+
 class WebsiteProfile(BaseModel):
     url: str
     about_text: str | None = None
@@ -108,6 +134,7 @@ class ScoredCompany(BaseModel):
     website: WebsiteProfile | None = None
     crawl_status: str | None = None
     crawl_detail: str = ""
+    analysis: CompanyAnalysis | None = None
     outreach: OutreachDraft | None = None
 
     @computed_field

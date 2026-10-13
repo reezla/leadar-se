@@ -5,10 +5,9 @@ from lead_finder.use_result_selection import (
     eligible_flags,
     eligible_remaining,
     extend_matching_selection,
-    keep_row_selection,
+    original_indices,
     parse_visual_order,
-    results_editor_key,
-    selected_rows,
+    selection_needs_app_rerun,
 )
 
 
@@ -61,16 +60,6 @@ def test_extend_keeps_a_checked_crawled_row() -> None:
     assert extend_matching_selection(eligible, [0], 5) == [0, 1]
 
 
-def test_keep_row_selection_copies_checks_onto_the_next_table() -> None:
-    state = {
-        "search_result_nonce": 2,
-        results_editor_key("search_result", 2): {"selection": {"rows": [1, 4], "columns": []}},
-    }
-    keep_row_selection(state, "search_result")
-    assert state["search_result_nonce"] == 3
-    assert selected_rows(state[results_editor_key("search_result", 3)]) == [1, 4]
-
-
 def test_sorted_municipality_marks_the_rows_under_the_checked_one() -> None:
     # On screen: Malmö, Stockholm, Uppsala. Stockholm is checked. +1 marks Uppsala.
     eligible = [True, True, True]
@@ -101,6 +90,19 @@ def test_parse_visual_order_accepts_only_a_full_permutation() -> None:
     assert parse_visual_order("", 3) == [0, 1, 2]
     assert parse_visual_order("[0, 1]", 3) == [0, 1, 2]
     assert parse_visual_order("nope", 3) == [0, 1, 2]
+
+
+def test_original_indices_follow_the_selected_companies() -> None:
+    orgs = ["5590961081", "5560945197", "5563000040"]
+    assert original_indices(orgs, ["5560945197", "5563000040"]) == [1, 2]
+
+
+def test_row_check_inside_the_grid_reruns_the_page() -> None:
+    assert selection_needs_app_rerun([], [0], in_fragment=True)
+    assert selection_needs_app_rerun(None, [0], in_fragment=True)
+    assert not selection_needs_app_rerun([0], [0], in_fragment=True)
+    assert not selection_needs_app_rerun(None, [], in_fragment=True)
+    assert not selection_needs_app_rerun([], [0], in_fragment=False)
 
 
 def test_analyzed_yes_is_thin_green_on_a_light_row() -> None:

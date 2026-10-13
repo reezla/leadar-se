@@ -1,0 +1,166 @@
+# Norrpoint scanner catalog used by the post-crawl product analysis.
+# Source: product pages on https://www.norrpoint.se/scanners (read 2026-10-12).
+# Ids match the family ids in config/products.yaml.
+# Keep claims here factual: the analysis and the email prompt may quote them.
+
+scanners:
+  p2:
+    name: P2
+    full_name: FJD Trion P2 LiDAR
+    url: https://www.norrpoint.se/products/fjd-trion-p2-lidar
+    class: handheld SLAM
+    specs:
+      weight: 0.7 kg (excl. battery, camera, RTK)
+      range: 70 m @ 80 %, 40 m @ 10 %
+      accuracy: 1.2 cm relative, 3 cm absolute (post-processed)
+      speed: 200 000 pts/s
+      extras: colour point cloud in real time, visual SLAM, optional RTK, IP54
+    best_for:
+      - interiors, technical rooms, shafts and smaller areas
+      - scan-to-BIM and as-built of existing buildings
+      - checking installations against drawings
+    buyers: surveyors, architects, building, MEP and industrial consultants, contractors
+    pick_when: the company documents existing buildings, interiors, plants or technical rooms
+    avoid_when: work is mostly large outdoor sites, long tunnels or stockpiles (prefer S1/S2/T1)
+
+  p2_vision:
+    name: P2 Vision+
+    full_name: FJD Trion P2 Vision+
+    url: https://www.norrpoint.se/products/fjd-trion-p2-vision-plus
+    class: handheld SLAM with thermal camera
+    specs:
+      weight: 0.98 kg incl. battery and thermal camera
+      accuracy: 1 cm relative, 3 cm absolute (post-processed)
+      thermal: ±2 °C; Max version 640 × 512 thermal
+      extras: LiDAR, RGB (2 × 48 MP) and thermal in one dataset, deviation reports with floor plans
+    best_for:
+      - thermography and energy surveys tied to a 3D model
+      - inspection with on-site reporting of deviations
+    buyers: energy and HVAC consultants, inspectors, property technicians
+    pick_when: the site mentions termografi, värmekamera, energikartläggning, besiktning or inspection
+    avoid_when: no inspection or thermal work is mentioned (prefer P2)
+
+  s1:
+    name: S1
+    full_name: FJD S1 3D LiDAR
+    url: https://www.norrpoint.se/products/fjd-s1-3d-lidar
+    class: SLAM scanner, handheld, backpack, vehicle or drone
+    specs:
+      range: 120 m
+      accuracy: 2 cm relative
+      speed: 320 000 pts/s (S1 Pro 640 000)
+      extras: works without GNSS, hot-swap batteries, 4 h runtime
+    best_for:
+      - stockpile and quarry volumes
+      - forestry inventory under canopy
+      - general outdoor and underground capture without GNSS
+    proof: over 15 000 m³ of ballast measured in 30 minutes
+    buyers: quarries, gravel and sand pits, forestry services, site investigation
+    pick_when: the site mentions täkt, lagerhögar, ballast, grus, volymer, skog or bestånd
+    avoid_when: work is fine-detail interiors (prefer P2/C1)
+
+  s2:
+    name: S2
+    full_name: FJD Trion S2 series
+    url: https://www.norrpoint.se/products/fjd-s2-series
+    class: long-range SLAM scanner, handheld, vehicle or drone
+    specs:
+      weight: 1.8 kg (excl. battery, camera, RTK)
+      range: 120 m (S2 MAX 300 m)
+      accuracy: 1.2 cm relative, 3 cm absolute
+      speed: 320 000 pts/s (PRO/MAX 640 000)
+    best_for:
+      - tunnels, drifts, shafts and mines without GNSS
+      - roads, rail, bridges and other infrastructure
+      - large outdoor areas
+    buyers: tunnel and rail contractors, mining, infrastructure consultants, utilities
+    pick_when: the site mentions tunnel, gruva, bergrum, järnväg, väg, bro or large infrastructure
+    avoid_when: work is small interiors (prefer P2)
+
+  t1:
+    name: T1
+    full_name: FJD Trion T1
+    url: https://www.norrpoint.se/products/fjd-trion-t1
+    class: hybrid mobile + terrestrial (tripod) scanner
+    specs:
+      weight: 1.645 kg
+      range: 0.5–120 m mobile, 0.5–60 m on tripod
+      accuracy: ≤ 1 cm mobile; 4 mm @ 10 m, 8 mm @ 30 m on tripod
+      speed: 640 000 pts/s
+      extras: built-in RTK/PPK GNSS, 2 × 48 MP 360° panorama, handheld, vehicle, airborne or tripod
+    best_for:
+      - surveyors who need mm-level detail in places and fast coverage elsewhere
+      - firms that already run terrestrial laser scanning and want speed
+      - architecture, infrastructure, mining and tunnels with high accuracy demands
+    buyers: survey and measurement consultants, scanning service providers, infrastructure consultants
+    pick_when: the site mentions laserskanning, punktmoln, 3D-skanning, terrester or high-accuracy as-built
+    avoid_when: buyer is a beginner or needs only simple documentation (prefer V4e/P2)
+
+  x1:
+    name: X1
+    full_name: FJD Trion X1
+    url: https://www.norrpoint.se/products/fjd-trion-x1
+    class: guided handheld scanner with GNSS and 360° images
+    specs:
+      weight: 0.9 kg
+      range: 70 m @ 80 %
+      accuracy: 1 cm relative, 3 cm absolute
+      speed: 384 000 pts/s
+      extras: built-in GNSS, 360° panoramas, screen with route guidance, issue marking, voice notes, cloud reporting
+    best_for:
+      - repeated site documentation and progress checks by non-specialists
+      - as-built checks, material yards, incidents and urban tree inventory
+    buyers: contractors, site managers, property owners, inspectors
+    pick_when: the company runs many sites or projects and needs guided, repeatable documentation
+    avoid_when: buyer is a survey specialist who wants maximum accuracy (prefer T1/P2)
+
+  v4e:
+    name: V4e
+    full_name: FJD Trion V4e LiDAR
+    url: https://www.norrpoint.se/products/fjd-v4e-lidar
+    class: entry-level lightweight LiDAR
+    specs:
+      weight: about 0.89 kg
+      range: up to 50 m @ 90 %
+      accuracy: 1 cm relative, 3 cm absolute (post-processed)
+      extras: ≥ 5 h battery, tablet live preview, low learning curve
+    best_for:
+      - teams starting with 3D scanning
+      - basic documentation for small firms
+    buyers: small surveying, construction and mapping teams
+    pick_when: small company (under 5 employees) or no sign of existing scanning
+    avoid_when: tunnels, large infrastructure or high accuracy demands
+
+  c1:
+    name: C1
+    full_name: FJD Trion C1 Indoor LiDAR
+    url: https://www.norrpoint.se/products/fjd-trion-c1
+    class: indoor floor-plan scanner
+    specs:
+      weight: 0.95 kg
+      range: 0.1–6 m
+      accuracy: built-in laser ±3 mm; 1 cm relative after processing
+      speed: 200 m² in about 3 minutes
+      extras: editable DXF floor plans and plan report in the browser
+    best_for:
+      - floor plans of apartments, offices and premises
+      - tenant fit-out and renovation drawings
+    buyers: property managers and owners, architects, interior designers, renovation firms
+    pick_when: the site mentions planritningar, lägenheter, lokaler, hyresgästanpassning or förvaltning
+    avoid_when: outdoor, infrastructure or large technical spaces
+
+  v100f:
+    name: V100F
+    full_name: FJD Trion V100F
+    url: https://www.norrpoint.se/products/fjd-trion-v100f
+    class: GNSS rover with LiDAR and cameras
+    specs:
+      weight: 1.75 kg
+      accuracy: RTK 8 mm + 1 ppm (H); LiDAR ±5 cm @ 20 m without contact
+      extras: points, lines and surfaces without line of sight, SureFix ±5 cm near open sky, IP65, up to 22 h RTK
+    best_for:
+      - GNSS pole surveying (stolpmätning) where sky is partly blocked
+      - roads, excavation, urban corridors, solar parks and bridges
+    buyers: survey technicians, earthworks and road contractors with GNSS work
+    pick_when: the site mentions GNSS, RTK, utsättning, stolpmätning, inmätning, maskinstyrning or mängdning
+    avoid_when: the job is detailed interiors (prefer P2/C1)

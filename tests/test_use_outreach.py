@@ -18,6 +18,7 @@ class FakeWriter:
         match: object,
         sender: str = "norrpoint",
         previous: str = "",
+        **_: object,
     ) -> OutreachDraft:
         self.sender = sender
         self.previous = previous
@@ -79,19 +80,23 @@ def test_outreach_drafts_from_stored_crawl() -> None:
     assert result.companies[1].outreach is None
 
 
-def test_outreach_skips_rows_that_were_not_crawled() -> None:
+def test_outreach_drafts_when_the_company_was_never_crawled() -> None:
     writer = FakeWriter()
     result = generate_outreach(
-        _result(_company("5560000001", "Aquasvea AB")),
+        _result(_company("5560000001", "Aquasvea AB", domain="https://aquasvea.se")),
         ["5560000001"],
         settings=Settings(outreach_max_selected=20, openai_api_key="x"),
         writer=writer,
     )
-    assert writer.profiles == []
-    assert result.companies[0].outreach is None
+    assert writer.profiles[0].url == "https://aquasvea.se"
+    assert writer.profiles[0].about_text is None
+    draft = result.companies[0].outreach
+    assert draft is not None
+    assert draft.status == "drafted"
+    assert draft.body == "Hej Aquasvea AB"
 
 
-def test_missing_website_sets_status_without_calling_writer() -> None:
+def test_missing_website_still_drafts_without_search_or_crawl() -> None:
     writer = FakeWriter()
     missed = _crawled(
         "5560000001",
@@ -105,9 +110,9 @@ def test_missing_website_sets_status_without_calling_writer() -> None:
         settings=Settings(outreach_max_selected=20),
         writer=writer,
     )
-    assert writer.profiles == []
+    assert writer.profiles[0].url == ""
     assert result.companies[0].outreach is not None
-    assert result.companies[0].outreach.status == "no_website"
+    assert result.companies[0].outreach.status == "drafted"
     assert result.companies[0].outreach.detail == "No official website found."
 
 
@@ -159,6 +164,7 @@ def test_ai_failure_is_reported_and_kept_on_the_draft() -> None:
             match: object,
             sender: str = "norrpoint",
             previous: str = "",
+            **_: object,
         ) -> OutreachDraft:
             draft = super().write(company, profile, match, sender, previous)
             return draft.model_copy(update={"detail": "AI generation failed: HTTP 429."})

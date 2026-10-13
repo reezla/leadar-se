@@ -43,7 +43,21 @@ jobs:
       - geomanagement
       - lantmäteri
     require_keywords: true
-    primary: s1
+    primary: t1
+    alternative: v100f
+  - id: laser_scanning
+    name: Laserskanning och punktmoln
+    brand: norrpoint
+    priority: 22
+    keywords:
+      - laserskanning
+      - laserscanning
+      - 3d-skanning
+      - 3d-scanning
+      - terrester
+      - punktmoln
+    require_keywords: true
+    primary: t1
     alternative: p2
   - id: indoor_plans
     name: Inomhusplanritningar
@@ -57,9 +71,10 @@ jobs:
     name: GNSS och stolpmätning
     brand: norrpoint
     priority: 40
-    keywords: ["stolpmät", "punktmät", "utsättning", "gnss", "rtk"]
+    keywords: ["stolpmät", "punktmät", "utsättning", "gnss", "rtk", "maskinstyrning"]
     require_keywords: true
     primary: v100f
+    alternative: t1
   - id: tunnel_asbuilt
     name: Tunnel, under jord och gruva
     brand: norrpoint
@@ -128,7 +143,7 @@ jobs:
     brand: norrpoint
     priority: 120
     sni_prefixes: ["411", "412"]
-    keywords: ["byggarbetsplats", "entreprenad"]
+    keywords: ["byggarbetsplats", "entreprenad", "egenkontroll", "relationskontroll"]
     employee_min: 5
     primary: x1
     alternative: p2

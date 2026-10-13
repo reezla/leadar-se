@@ -18,9 +18,11 @@ class JobHit:
 def match_company(
     company: Company,
     catalog: MatchingCatalog | None = None,
+    *,
+    extra_text: str = "",
 ) -> ProductMatch:
     catalog = catalog or load_matching_catalog()
-    haystack = _haystack(company)
+    haystack = f"{_haystack(company)} {extra_text.casefold()}".strip()
     norrpoint = _best_hit(company, catalog, haystack, "norrpoint")
     metricop = _best_hit(company, catalog, haystack, "metricop")
     return _product_match(norrpoint, metricop, catalog)

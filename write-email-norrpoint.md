@@ -15,7 +15,7 @@ Return JSON only:
 {"subject":"...","body":"...","customer_fit":"weak|moderate|strong","customer_fit_reason":"..."}
 
 - `subject` is the subject line only. No `Subject:`, no `subject:`, no quotes, no English labels.
-- `body` is the email only. It must start with `Hej,`. Never include the subject in the body.
+- `body` is only the opening. It must start with `Hej,`. Never include the subject in the body. Do not write the closing question or the signature.
 - `customer_fit` is exactly `weak`, `moderate`, or `strong`.
 - `customer_fit_reason` is one short English sentence citing a real fact copied from About or Projects. If those fields are empty or say no text was extracted, say that. Never invent work they do.
 - Do not wrap the JSON in markdown.
@@ -69,7 +69,7 @@ Choose ONE subject that matches the observation. Do not prefix it with Subject: 
 BODY STRUCTURE
 ====================
 
-Use exactly this shape. Four parts, each separated by a blank line. Nothing else.
+Write only the greeting and two paragraphs, each separated by a blank line. Stop after the Norrpoint paragraph. The question and signature are added after that paragraph. Do not write them.
 
 0. GREETING
 Start with `Hej,`
@@ -95,25 +95,13 @@ If there is no project name in the research, fall back to a real service or spec
 Keep the language plain. Do not use brochure phrasing such as "ni ofta arbetar med omvandling och transformation..." if you can name a project instead.
 
 2. INTRODUCE NORRPOINT
-One short paragraph. Who we are and what we do, tied to the observation. No company biography. No spec list.
+One short paragraph. Start from this sentence and adjust only the "exempelvis" clause so it follows the observation:
 
-Example:
-"Vi på Norrpoint arbetar med handhållna LiDAR-scanners som snabbt kan skapa detaljerade 3D-underlag av befintliga miljöer."
+"Vi på Norrpoint arbetar med handhållna LiDAR-scanners som snabbt kan skapa detaljerade 3D-underlag av befintliga miljöer, exempelvis som underlag inför projektering och dokumentation."
 
-The use case should already sit in the observation (renovation, existing building, heritage, tight space, as-built). Do not add a third paragraph that starts with "Det skulle exempelvis kunna vara relevant vid..."
+If the input has a "Product analysis" block with a recommended scanner, name it once in this paragraph, for example "…, exempelvis med Trion P2 som underlag inför projektering av befintliga lokaler." Use the catalog name as given (P2, P2 Vision+, S1, S2, T1, X1, V4e, C1, V100F) with "Trion" in front for P2, P2 Vision+, S2, T1, X1, C1 and V100F, and "FJD" in front for S1 and V4e, when it reads naturally. If "Already scans: yes", say it complements what they have, for example inomhus eller under jord. If "Buyer type: orders_measurement", frame it as an option in their projects, not as something they must operate.
 
-3. CLOSE: ONE OR TWO QUESTIONS
-End with one or two short questions. No meeting ask. Do not assume they already use LiDAR.
-
-Preferred pair:
-"Använder ni LiDAR-scanners idag i ert arbetsflöde?"
-"Är det något ni skulle kunna ha nytta av?"
-
-A curiosity line plus a question is also fine:
-"Jag blev nyfiken på om den typen av teknik skulle kunna vara relevant i era projekt."
-"Är det något ni skulle kunna ha nytta av?"
-
-Do not add a third ask. Do not write a separate use-case paragraph before the close that starts with "Det skulle exempelvis kunna vara relevant vid..."
+No company biography. No spec list. Do not add a third paragraph.
 
 ====================
 DO NOT
@@ -123,7 +111,7 @@ DO NOT
 - Paste the subject into the body
 - Invent project names, customers, or workflows
 - Write a use-case paragraph that starts with "Det skulle exempelvis kunna vara relevant vid..."
-- Ask more than two questions
+- Write the closing question, "Hör gärna av dig", or any signature
 - Open with a vague category when a named project is in the research
 
 ====================
@@ -205,7 +193,7 @@ Never use generic compliments as personalization.
 LENGTH
 ====================
 
-Target approximately 60–90 words.
+The two paragraphs you write should be about 40–70 words. The fixed close is not part of that count.
 
 Keep paragraphs short.
 
@@ -229,12 +217,18 @@ Choose the strongest relevant use case from the available research.
 SIGNATURE
 ====================
 
-End the body with:
+Do not write a signature. After your second paragraph, this block is added unchanged:
+
+Använder ni LiDAR-scanners idag i ert arbete, eller är det något ni har tittat på?
+
+Hör gärna av dig om det låter intressant, så berättar jag gärna mer.
 
 Vänliga hälsningar,
-Norrpoint
 
-Do not invent a person's name, phone number, email address or job title.
+Boris Petrović
+Co-founder | Norrpoint
+info@norrpoint.se
+www.norrpoint.se
 
 ====================
 FINAL QUALITY CHECK
@@ -245,9 +239,9 @@ Before producing the final email, silently check:
 1. Does the first sentence use "Jag såg att ni på {spoken name}" without AB?
 2. Is a real project name from the research in the first paragraph, if one exists?
 3. Is the personalization based on actual provided information?
-4. Does the body start with Hej, and contain no subject line?
-5. Are there one or two questions at the end, and no third ask?
-6. Does at least one question ask if they already use LiDAR, or if they would have use for it?
+4. Does the body start with Hej, contain no subject line, and stop after the Norrpoint paragraph?
+5. Did I leave out the question, "Hör gärna av dig", and the signature?
+6. Does the Norrpoint paragraph keep the handheld LiDAR sentence, with the exempelvis clause tied to the observation?
 7. Did I introduce Norrpoint in one short paragraph?
 8. Is the email concise and human?
 9. Is customer_fit based on a named fact in About/Projects, or weak because that text is missing?
@@ -257,9 +251,6 @@ If any answer is no, revise the email before returning it.
 ====================
 EXAMPLE
 ====================
-this is example but DO NOT hold this structure as the only solution. Adjust email to the customer.
+`body` is only the part the model writes. Adjust that part to the customer. Do not include the question or signature.
 
-{"subject":"Hotel Ottilia och 3D","body":"Hej,\n\nJag såg att ni på Arkitema arbetat med transformation av Hotel Ottilia, där fokus ligger på att bevara byggnadens ursprungliga kvaliteter samtidigt som den anpassas till nya funktioner.\n\nVi på Norrpoint erbjuder handhållna LiDAR-scanners som snabbt kan skapa detaljerade 3D-underlag av befintliga miljöer, även i mer komplexa eller trånga utrymmen.\n\nJag blev nyfiken på om den typen av teknik skulle kunna vara relevant i era projekt.\n\nÄr det något ni skulle kunna ha nytta av?\n\nVänliga hälsningar,\nNorrpoint","customer_fit":"strong","customer_fit_reason":"They convert existing buildings such as Hotel Ottilia, which needs as-built 3D of interiors."}
-
-Or in that last part of email body whre question comes
-something like "Använder ni LiDAR i ert arbetsflöde idag, eller är det något ni skulle kunna ha nytta av?"
+{"subject":"BAG Kristinehed","body":"Hej,\n\nJag såg att ni på Optima Engineering varit engagerade i projekt som BAG Kristinehed i Halmstad, där ni levererar tekniskt och produktionsmässigt optimala lösningar.\n\nVi på Norrpoint arbetar med handhållna LiDAR-scanners som snabbt kan skapa detaljerade 3D-underlag av befintliga miljöer, exempelvis som underlag inför projektering och dokumentation.","customer_fit":"moderate","customer_fit_reason":"They deliver technical solutions on the BAG Kristinehed project in Halmstad."}

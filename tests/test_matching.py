@@ -78,11 +78,11 @@ def test_secondary_sni_does_not_pick_product() -> None:
     assert match.status == "needs_review"
 
 
-def test_matkonsult_name_maps_to_s1_and_metricop() -> None:
+def test_matkonsult_name_maps_to_t1_and_metricop() -> None:
     match = match_company(_company(sni_codes=["71121"], name="Clinton Mätkonsult Aktiebolag"))
     assert match.status == "matched"
     assert match.brand == "norrpoint; metricop"
-    assert match.primary == "S1"
+    assert match.primary == "T1"
     assert match.alternative == "Metricop fält"
     assert "Metricop fält" in "; ".join(match.evidence)
 
@@ -91,7 +91,7 @@ def test_leica_signal_routes_to_metricop() -> None:
     match = match_company(_company(sni_codes=["71121"], name="Leica Mätcenter AB"))
     assert match.status == "matched"
     assert match.brand == "norrpoint; metricop"
-    assert match.primary == "S1"
+    assert match.primary == "T1"
     assert match.alternative == "Metricop fält"
 
 
@@ -118,3 +118,20 @@ def _company(
         employee_min=employee_min,
         employee_max=employee_max,
     )
+
+
+def test_site_text_feeds_matching() -> None:
+    match = match_company(
+        _company(sni_codes=["71121"], name="Nordmät AB"),
+        extra_text="Vi utför laserskanning av anläggningar.",
+    )
+    assert match.status == "matched"
+    assert match.primary == "T1"
+
+
+def test_gnss_survey_text_maps_to_v100f() -> None:
+    match = match_company(
+        _company(sni_codes=["43120"], name="Markbolaget AB"),
+        extra_text="Utsättning och maskinstyrning med GNSS.",
+    )
+    assert match.primary == "V100F"

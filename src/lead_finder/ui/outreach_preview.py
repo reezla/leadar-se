@@ -5,9 +5,12 @@ from html import escape
 import streamlit as st
 
 from lead_finder.models import ScoredCompany
+from lead_finder.ui.copy_email import render_copy_email
+from lead_finder.ui.copy_field import website_href
 from lead_finder.use_company_search import SearchResult
 from lead_finder.use_outreach_rewrite import rewrite_outreach
 
+_BODY_LABEL = '<p style="margin:0;font-size:14px;line-height:1.6;">Body</p>'
 _FIT_COLORS = {
     "weak": "#c62828",
     "moderate": "#ef6c00",
@@ -48,8 +51,15 @@ def render_outreach_preview(
     if draft is None:
         return result
     website = scored.company.domain or (draft.website.url if draft.website else "")
-    if website:
-        st.caption(f"Website: {website}")
+    href = website_href(website)
+    if href:
+        safe_href = escape(href, quote=True)
+        safe_label = escape(website, quote=True)
+        link = (
+            f'Website: <a href="{safe_href}" target="_blank" '
+            f'rel="noopener noreferrer">{safe_label}</a>'
+        )
+        st.markdown(link, unsafe_allow_html=True)
     _render_market_fit(draft.customer_fit, draft.customer_fit_reason)
     if draft.suggested_recipient:
         st.caption(f"Suggested recipient: {draft.suggested_recipient}")
@@ -68,11 +78,21 @@ def render_outreach_preview(
         draft.subject,
         key=f"outreach_subject_{widget_key}_{nonce}_{org}",
     )
+    body_key = f"outreach_body_{widget_key}_{nonce}_{org}"
+    with st.container(
+        horizontal=True,
+        vertical_alignment="center",
+        gap="xxsmall",
+        width="content",
+    ):
+        st.markdown(_BODY_LABEL, unsafe_allow_html=True)
+        render_copy_email(str(st.session_state.get(body_key, draft.body)), key=body_key)
     body = st.text_area(
         "Body",
         draft.body,
         height=220,
-        key=f"outreach_body_{widget_key}_{nonce}_{org}",
+        label_visibility="collapsed",
+        key=body_key,
     )
     can_rewrite = bool(sender) and draft.website is not None and bool(draft.website.url)
     if st.button(

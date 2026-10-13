@@ -7,11 +7,8 @@ from dataclasses import dataclass, field
 
 import httpx
 
-from lead_finder.config import get_settings
-from lead_finder.providers.website_crawl import WebsiteCrawler
-from lead_finder.providers.website_search import build_website_finder
 from lead_finder.use_company_search import SearchResult
-from lead_finder.use_lead_crawl import generate_leads
+from lead_finder.use_company_store import CompanyStore
 from lead_finder.use_lead_queue import finished_orgs
 
 logger = logging.getLogger(__name__)
@@ -36,6 +33,7 @@ class LeadJob:
     notices: list[str] = field(default_factory=list)
     delivered: int = 0
     client: httpx.Client | None = None
+    store: CompanyStore | None = None
 
     def add_notice(self, message: str) -> None:
         with self.lock:
@@ -90,8 +88,9 @@ def start_lead_job(
     pending: list[str],
     *,
     work: Work | None = None,
+    store: CompanyStore | None = None,
 ) -> LeadJob:
-    job = LeadJob(result=result, pending=list(pending), total=len(pending))
+    job = LeadJob(result=result, pending=list(pending), total=len(pending), store=store)
     _jobs[session_key] = job
     thread = threading.Thread(
         target=work or _crawl_pending,
@@ -104,50 +103,25 @@ def start_lead_job(
 
 
 def _crawl_pending(job: LeadJob) -> None:
-    settings = get_settings()
-    finder = build_website_finder(settings)
-    crawler = WebsiteCrawler(settings, client=finder.client)
-    job.client = finder.client
-    done = 0
-    result = job.result
+    from lead_finder.use_lead_crawl_pool import crawl_pending
+
+    crawl_pending(job)
+
+
+def _save_crawl(job: LeadJob, result: SearchResult, org: str) -> None:
+    store = job.store
+    if store is None or org not in finished_orgs(result.companies, [org]):
+        return
+    scored = next(item for item in result.companies if item.company.organization_number == org)
     try:
-        for org in job.pending:
-            if job.stop.is_set():
-                break
-            batch = generate_leads(
-                result,
-                [org],
-                settings=settings,
-                finder=finder,
-                crawler=crawler,
-                on_progress=lambda _done, _total, message: _set_message(job, message),
-                on_notice=job.add_notice,
-                should_stop=job.stop.is_set,
-            )
-            result = batch.result
-            if finished_orgs(result.companies, [org]):
-                done += 1
-            with job.lock:
-                job.result = result
-                job.done = done
-                job.records = [*job.records, *batch.records]
-            if batch.stopped or job.stop.is_set():
-                with job.lock:
-                    job.stopped = batch.stopped and not job.stop.is_set()
-                break
-        _finish(job, done)
-    except Exception as error:
-        if job.stop.is_set():
-            _finish(job, done)
-            return
-        logger.exception("Lead crawl failed")
-        job.add_notice(f"Lead crawl failed: {error}")
-        with job.lock:
-            job.error = str(error)
-            job.phase = "done"
-    finally:
-        finder.close()
-        job.client = None
+        outcome = store.patch_crawl(scored)
+    except Exception:
+        logger.exception("Could not save crawl org=%s", org)
+        job.add_notice("Could not save crawl results to the database.")
+        return
+    if outcome.error:
+        logger.warning("Could not save crawl org=%s detail=%s", org, outcome.error)
+        job.add_notice("Could not save crawl results to the database.")
 
 
 def _set_message(job: LeadJob, message: str) -> None:

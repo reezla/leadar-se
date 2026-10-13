@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     sni_catalog_path: Path = Path("config/sni_catalog.yaml")
     products_path: Path = Path("config/products.yaml")
     jobs_path: Path = Path("config/jobs.yaml")
+    scanners_path: Path = Path("config/scanners.yaml")
+    analysis_model: str | None = None
     norrpoint_prompt_path: Path = Path("write-email-norrpoint.md")
     allabolag_base_url: str = "https://www.allabolag.se"
     allabolag_timeout_seconds: float = 30
@@ -36,17 +38,26 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o-mini"
     openai_api_url: str = "https://api.openai.com/v1/chat/completions"
     website_search_provider: str = "google"
+    serper_api_key: str | None = None
+    serper_search_url: str = "https://google.serper.dev/search"
+    serper_timeout_seconds: float = 60
     google_search_url: str = "https://www.google.com/search"
     duckduckgo_search_url: str = "https://html.duckduckgo.com/html/"
     duckduckgo_lite_url: str = "https://lite.duckduckgo.com/lite/"
     google_search_timeout_seconds: float = 20
     google_requests_per_window: int = 4
     google_rate_limit_window_seconds: float = 10
-    website_crawl_timeout_seconds: float = 20
+    website_crawl_timeout_seconds: float = 10
+    website_crawl_connect_timeout_seconds: float = 5
     website_crawl_max_pages: int = 4
-    website_crawl_requests_per_window: int = 4
-    website_crawl_rate_limit_window_seconds: float = 10
+    website_crawl_concurrency: int = 5
+    website_crawl_max_in_flight: int = 8
+    website_crawl_per_host_in_flight: int = 3
+    website_crawl_host_gap_seconds: float = 1
+    website_render_timeout_seconds: float = 20
     outreach_max_selected: int = 20
+    supabase_url: str | None = None
+    supabase_secret_key: str | None = None
 
 
 class Segment(BaseModel):

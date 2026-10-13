@@ -5,11 +5,36 @@ from pathlib import Path
 from lead_finder.config import get_settings
 
 SENDERS = ("norrpoint", "metricop")
+NORRPOINT_CLOSE = (
+    "Använder ni LiDAR-scanners idag i ert arbete, eller är det något ni har tittat på?\n\n"
+    "Hör gärna av dig om det låter intressant, så berättar jag gärna mer.\n\n"
+    "Vänliga hälsningar,\n\n"
+    "Boris Petrović\n"
+    "Co-founder | Norrpoint\n"
+    "info@norrpoint.se\n"
+    "www.norrpoint.se"
+)
+_CLOSE_MARKERS = (
+    "Använder ni LiDAR-scanners idag",
+    "Hör gärna av dig",
+    "Vänliga hälsningar",
+)
 
 
 def normalize_sender(value: str | None) -> str:
     raw = (value or "norrpoint").strip().casefold()
     return raw if raw in SENDERS else "norrpoint"
+
+
+def attach_norrpoint_close(body: str) -> str:
+    text = body.strip()
+    cut = len(text)
+    for marker in _CLOSE_MARKERS:
+        index = text.find(marker)
+        if index != -1:
+            cut = min(cut, index)
+    opening = text[:cut].rstrip()
+    return f"{opening}\n\n{NORRPOINT_CLOSE}"
 
 
 def sender_label(value: str | None) -> str:

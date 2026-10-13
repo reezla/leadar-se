@@ -9,14 +9,8 @@ SECONDS_PER_COMPANY = 20
 
 
 def companies_to_crawl(result: SearchResult, org_numbers: list[str]) -> list[str]:
-    by_org = {item.company.organization_number: item for item in result.companies}
-    pending: list[str] = []
-    for org in dict.fromkeys(org_numbers):
-        scored = by_org.get(org)
-        if scored is None or scored.crawl_status in DONE_STATUSES:
-            continue
-        pending.append(org)
-    return pending
+    known = {item.company.organization_number for item in result.companies}
+    return [org for org in dict.fromkeys(org_numbers) if org in known]
 
 
 def take_batch(pending: list[str], size: int) -> tuple[list[str], list[str]]:
@@ -34,11 +28,32 @@ def estimate_crawl_seconds(
     batch_size: int,
     pause_seconds: int,
     seconds_per_company: int = SECONDS_PER_COMPANY,
+    concurrency: int = 5,
 ) -> int:
     if count <= 0 or batch_size <= 0:
         return 0
+    workers = max(1, concurrency)
+    waves = (count + workers - 1) // workers
     batches = (count + batch_size - 1) // batch_size
-    return count * seconds_per_company + max(0, batches - 1) * pause_seconds
+    return waves * seconds_per_company + max(0, batches - 1) * pause_seconds
+
+
+def lead_success_message(
+    records: list[dict[str, object]],
+    *,
+    total: int,
+    summary: str,
+    error: str,
+) -> str | None:
+    if error or not summary.startswith("Crawled ") or total <= 0:
+        return None
+    crawled = sum(1 for record in records if record.get("crawl_status") == "crawled")
+    if crawled <= 0:
+        return None
+    if crawled == total:
+        noun = "company" if crawled == 1 else "companies"
+        return f"Leads generated for {crawled} {noun}."
+    return f"Leads generated for {crawled} of {total} companies."
 
 
 def format_crawl_estimate(seconds: int) -> str:

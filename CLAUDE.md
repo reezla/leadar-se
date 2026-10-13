@@ -1,0 +1,5 @@
+# Rules for Claude
+
+- End every answer with a `TODO -` line listing the steps the user must do themselves
+  (for example run a migration, set a secret, approve access, test in the app).
+  If there is nothing for the user to do, write `TODO - None`.

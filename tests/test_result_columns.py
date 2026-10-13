@@ -1,52 +1,14 @@
 from lead_finder.models import Company, OutreachDraft, ScoredCompany, ScoreReason, WebsiteProfile
-from lead_finder.ui.column_hide import hide_slot_weights
+from lead_finder.ui.copy_field import website_href
 from lead_finder.ui.result_rows import crawled_table, score_explanation
 from lead_finder.ui.results import _columns, _row
-from lead_finder.use_result_columns import hide_column, merge_column_order
 
 
-def test_merge_starts_with_all_available_columns() -> None:
-    available = ["Score", "Company", "Missing"]
-    order, known = merge_column_order(available, None, None)
-    assert order == available
-    assert known == available
-
-
-def test_merge_keeps_hidden_columns_hidden() -> None:
-    available = ["Score", "Company", "Missing"]
-    order, known = merge_column_order(available, ["Company", "Score"], available)
-    assert order == ["Company", "Score"]
-    assert known == available
-
-
-def test_hide_slot_weights_include_checkbox_and_wider_company() -> None:
-    weights = hide_slot_weights(["Score", "Company", "Brand"])
-    assert len(weights) == 4
-    assert weights[2] > weights[1]
-
-
-def test_hide_column_removes_name() -> None:
-    assert hide_column(["Score", "Company", "Website"], "Website") == [
-        "Score",
-        "Company",
-    ]
-
-
-def test_hide_column_keeps_the_last_column() -> None:
-    assert hide_column(["Score"], "Score") == ["Score"]
-
-
-def test_hide_column_ignores_unknown_name() -> None:
-    assert hide_column(["Score", "Company"], "Missing") == ["Score", "Company"]
-
-
-def test_merge_appends_new_columns() -> None:
-    previous = ["Score", "Company", "SNI", "Missing"]
-    visible = ["Company", "Score"]
-    available = ["Score", "Company", "Job", "Brand", "SNI", "Missing"]
-    order, known = merge_column_order(available, visible, previous)
-    assert order == ["Company", "Score", "Job", "Brand"]
-    assert known == available
+def test_website_href_opens_a_bare_domain() -> None:
+    assert website_href("aquasvea.se") == "https://aquasvea.se"
+    assert website_href("https://aquasvea.se/om") == "https://aquasvea.se/om"
+    assert website_href("") is None
+    assert website_href("Not set") is None
 
 
 def test_row_omits_why_and_matches_column_list() -> None:

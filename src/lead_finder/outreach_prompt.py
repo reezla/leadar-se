@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from lead_finder.models import Company, ProductMatch, WebsiteProfile
+from lead_finder.models import Company, CompanyAnalysis, ProductMatch, WebsiteProfile
 from lead_finder.outreach_sender import offer_line, sender_label
 
 _LEGAL_SUFFIXES = (
@@ -20,6 +20,7 @@ def user_prompt(
     match: ProductMatch | None,
     sender: str = "norrpoint",
     previous: str = "",
+    analysis: CompanyAnalysis | None = None,
 ) -> str:
     job = match.job if match is not None and match.job else ""
     size = company.employee_class or "unknown size"
@@ -44,6 +45,7 @@ def user_prompt(
         f"About:\n{about}\n\n"
         f"Projects / references:\n{projects}\n"
     )
+    text += analysis_block(analysis)
     if previous.strip():
         text += (
             "\nPrevious draft to replace. Write a different email from the same research. "
@@ -51,6 +53,27 @@ def user_prompt(
             f"{previous.strip()}\n"
         )
     return text
+
+
+def analysis_block(analysis: CompanyAnalysis | None) -> str:
+    if analysis is None or not analysis.recommended_product:
+        return ""
+    alternatives = ", ".join(pick.product for pick in analysis.alternatives) or "none"
+    lines = [
+        "\nProduct analysis (from the crawl; use it, do not contradict the website):",
+        f"Recommended scanner: {analysis.recommended_product} (alternatives: {alternatives})",
+        f"Why: {analysis.reason or 'not stated'}",
+        f"Buyer type: {analysis.buyer_type}",
+        f"Already scans: {'yes' if analysis.already_scans else 'no'}",
+    ]
+    if analysis.outreach_angle:
+        lines.append(f"Suggested angle: {analysis.outreach_angle}")
+    lines.append(
+        "Name the recommended scanner once in the Norrpoint paragraph, tied to the observation. "
+        "If they already scan, present it as a complement to what they have. "
+        "If buyer type is orders_measurement, frame it as an option for their projects."
+    )
+    return "\n".join(lines) + "\n"
 
 
 def spoken_company_name(name: str) -> str:

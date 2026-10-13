@@ -5,7 +5,13 @@ import logging
 import httpx
 
 from lead_finder.config import Settings
-from lead_finder.models import Company, OutreachDraft, ProductMatch, WebsiteProfile
+from lead_finder.models import (
+    Company,
+    CompanyAnalysis,
+    OutreachDraft,
+    ProductMatch,
+    WebsiteProfile,
+)
 from lead_finder.outreach_parse import parse_openai_content
 from lead_finder.outreach_prompt import user_prompt
 from lead_finder.outreach_sender import attach_norrpoint_close, sender_label, system_prompt
@@ -30,10 +36,14 @@ class OutreachWriter:
         match: ProductMatch | None,
         sender: str = "norrpoint",
         previous: str = "",
+        *,
+        analysis: CompanyAnalysis | None = None,
     ) -> OutreachDraft:
         if self.settings.openai_api_key:
             try:
-                return self._openai_write(company, profile, match, sender, previous)
+                return self._openai_write(
+                    company, profile, match, sender, previous, analysis=analysis
+                )
             except Exception as error:
                 logger.exception("OpenAI outreach generation failed for %s", company.name)
                 return template_draft(
@@ -58,6 +68,8 @@ class OutreachWriter:
         match: ProductMatch | None,
         sender: str,
         previous: str = "",
+        *,
+        analysis: CompanyAnalysis | None = None,
     ) -> OutreachDraft:
         request: dict[str, object] = {
             "model": self.settings.openai_model,
@@ -65,7 +77,9 @@ class OutreachWriter:
                 {"role": "system", "content": system_prompt(sender)},
                 {
                     "role": "user",
-                    "content": user_prompt(company, profile, match, sender, previous=previous),
+                    "content": user_prompt(
+                        company, profile, match, sender, previous=previous, analysis=analysis
+                    ),
                 },
             ],
             "response_format": {"type": "json_object"},

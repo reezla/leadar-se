@@ -8,6 +8,7 @@ from lead_finder.use_lead_queue import (
     companies_to_crawl,
     estimate_crawl_seconds,
     format_crawl_estimate,
+    lead_success_message,
     take_batch,
 )
 
@@ -178,7 +179,7 @@ def test_search_failure_keeps_going() -> None:
     assert batch.result.companies[1].website is not None
 
 
-def test_queue_skips_finished_rows_and_batches_the_rest() -> None:
+def test_queue_includes_rows_that_already_have_website_data() -> None:
     done = _company("5560000001", "Aquasvea AB").model_copy(update={"crawl_status": "crawled"})
     failed = _company("5560000002", "Search AB").model_copy(
         update={"crawl_status": "search_failed"}
@@ -189,18 +190,18 @@ def test_queue_skips_finished_rows_and_batches_the_rest() -> None:
         result,
         ["5560000001", "5560000002", "5560000003", "5560000002"],
     )
-    assert pending == ["5560000002", "5560000003"]
+    assert pending == ["5560000001", "5560000002", "5560000003"]
     batch, rest = take_batch(pending, 1)
-    assert batch == ["5560000002"]
-    assert rest == ["5560000003"]
+    assert batch == ["5560000001"]
+    assert rest == ["5560000002", "5560000003"]
     remaining, done_count, phase = after_batch(
         pending,
         batch,
-        ["5560000002"],
+        ["5560000001"],
         done=0,
         stopped=False,
     )
-    assert remaining == ["5560000003"]
+    assert remaining == ["5560000002", "5560000003"]
     assert done_count == 1
     assert phase == "wait"
     stopped, stopped_count, stopped_phase = after_batch(
@@ -264,9 +265,34 @@ def test_stop_during_search_error_leaves_the_row_untouched() -> None:
     assert batch.result.companies[0].crawl_status is None
 
 
+def test_success_message_counts_companies_that_were_crawled() -> None:
+    records = [
+        {"crawl_status": "crawled"},
+        {"crawl_status": "crawled"},
+        {"crawl_status": "no_website"},
+    ]
+    assert (
+        lead_success_message(records, total=3, summary="Crawled 3 of 3.", error="")
+        == "Leads generated for 2 of 3 companies."
+    )
+    assert (
+        lead_success_message(records[:1], total=1, summary="Crawled 1 of 1.", error="")
+        == "Leads generated for 1 company."
+    )
+    stopped = lead_success_message(
+        records,
+        total=3,
+        summary="Crawl stopped at 1 of 3.",
+        error="",
+    )
+    assert stopped is None
+    assert lead_success_message(records, total=3, summary="Crawled 3 of 3.", error="failed") is None
+
+
 def test_crawl_estimate_includes_pauses_between_batches() -> None:
-    assert estimate_crawl_seconds(20, batch_size=20, pause_seconds=8) == 400
-    assert estimate_crawl_seconds(21, batch_size=20, pause_seconds=8) == 428
+    assert estimate_crawl_seconds(20, batch_size=20, pause_seconds=8) == 80
+    assert estimate_crawl_seconds(21, batch_size=20, pause_seconds=8) == 108
+    assert estimate_crawl_seconds(20, batch_size=20, pause_seconds=8, concurrency=1) == 400
     assert estimate_crawl_seconds(0, batch_size=20, pause_seconds=8) == 0
     assert format_crawl_estimate(400) == "about 7 min"
     assert format_crawl_estimate(3600) == "about 1 h"

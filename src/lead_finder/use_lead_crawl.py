@@ -4,8 +4,9 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from lead_finder.analysis import ProductAnalyzer, analyze_scored
 from lead_finder.config import Settings, get_settings
-from lead_finder.models import ScoredCompany, WebsiteProfile
+from lead_finder.models import ScoredCompany
 from lead_finder.providers.website_crawl import WebsiteCrawler
 from lead_finder.providers.website_search import (
     SearchBlocked,
@@ -13,6 +14,7 @@ from lead_finder.providers.website_search import (
     build_website_finder,
 )
 from lead_finder.use_company_search import SearchResult
+from lead_finder.use_lead_crawl_site import crawl_url
 from lead_finder.use_lead_crawl_store import crawl_record, notify_progress, store_crawl
 
 logger = logging.getLogger(__name__)
@@ -36,6 +38,7 @@ def generate_leads(
     settings: Settings | None = None,
     finder: WebsiteFinder | None = None,
     crawler: WebsiteCrawler | None = None,
+    analyzer: ProductAnalyzer | None = None,
     on_progress: ProgressCallback | None = None,
     on_notice: Callable[[str], None] | None = None,
     should_stop: Callable[[], bool] | None = None,
@@ -48,8 +51,10 @@ def generate_leads(
     if crawler is None:
         shared = getattr(finder, "client", None)
         crawler = WebsiteCrawler(settings, client=shared)
-        if shared is None:
-            owned.append(crawler)
+        owned.append(crawler)
+    if analyzer is None:
+        analyzer = ProductAnalyzer(settings)
+        owned.append(analyzer)
     selected = list(dict.fromkeys(selected_org_numbers))[: settings.outreach_max_selected]
     selected_set = set(selected)
     try:
@@ -76,6 +81,8 @@ def generate_leads(
                 done=done,
                 total=total,
             )
+            if record is not None:
+                company = analyze_scored(company, analyzer)
             updated.append(company)
             if record is not None:
                 records.append(record)
@@ -150,32 +157,18 @@ def _crawl_company(
     notice = _search_notice(finder, company.name)
     stop = bool(getattr(finder, "blocked_detail", None))
     company = company.model_copy(update={"domain": url})
-    notify_progress(on_progress, done - 1, total, f"{company.name}: crawling {url}...")
-    detail = ""
-    status = "crawled"
-    try:
-        profile = crawler.crawl(url, source=source)
-    except Exception as error:
-        if _asked_to_stop(should_stop):
-            return scored, None, None, True
-        profile = WebsiteProfile(url=url, source=source)
-        detail = f"crawl_failed: {error}"[:300]
-        status = "crawl_failed"
-        logger.warning("Crawl failed company=%s url=%s detail=%s", company.name, url, error)
-        notice = notice or f"Crawl failed for {company.name}: {detail}"
-    notify_progress(on_progress, done, total, f"{company.name}: done")
-    stored, record = store_crawl(
+    stored, record, crawl_notice, crawl_stop = crawl_url(
         scored,
-        status,
-        detail,
-        done,
-        total,
-        on_progress,
-        profile=profile,
-        company=company,
-        notify=False,
+        company,
+        url,
+        source,
+        crawler,
+        on_progress=on_progress,
+        should_stop=should_stop,
+        done=done,
+        total=total,
     )
-    return stored, record, notice, stop
+    return stored, record, notice or crawl_notice, stop or crawl_stop
 
 
 def _asked_to_stop(should_stop: Callable[[], bool] | None) -> bool:

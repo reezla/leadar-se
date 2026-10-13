@@ -18,6 +18,7 @@ class FakeWriter:
         match: object,
         sender: str = "norrpoint",
         previous: str = "",
+        **_: object,
     ) -> OutreachDraft:
         self.sender = sender
         self.previous = previous
@@ -163,6 +164,7 @@ def test_ai_failure_is_reported_and_kept_on_the_draft() -> None:
             match: object,
             sender: str = "norrpoint",
             previous: str = "",
+            **_: object,
         ) -> OutreachDraft:
             draft = super().write(company, profile, match, sender, previous)
             return draft.model_copy(update={"detail": "AI generation failed: HTTP 429."})

@@ -1,20 +1,37 @@
 from __future__ import annotations
 
 import json
-from collections.abc import MutableMapping
-from typing import Any
 
 SELECT_STEPS = (5, 10, 20)
 _ROW_TINT = "background-color: #f3faf6"
 _ANALYZED_YES = f"{_ROW_TINT}; color: #2e7d32; font-weight: 400"
 
 
-def results_editor_key(session_key: str, nonce: int) -> str:
-    return f"results_editor_{session_key}_{nonce}"
+def original_indices(org_numbers: list[str], wanted: list[str]) -> list[int]:
+    place = {org: index for index, org in enumerate(org_numbers)}
+    return [place[org] for org in wanted if org in place]
+
+
+def results_editor_key(session_key: str, nonce: int, page: int = 0) -> str:
+    base = f"results_editor_{session_key}_{nonce}"
+    if page > 0:
+        return f"{base}_p{page}"
+    return base
 
 
 def table_order_key(session_key: str) -> str:
     return f"table_order_{session_key}"
+
+
+def selection_needs_app_rerun(
+    previous: object,
+    current: list[int],
+    *,
+    in_fragment: bool,
+) -> bool:
+    if not in_fragment or previous == list(current):
+        return False
+    return not (previous is None and not current)
 
 
 def selected_rows(state: object) -> list[int]:
@@ -29,15 +46,6 @@ def selected_rows(state: object) -> list[int]:
 
 def selection_state(rows: list[int]) -> dict[str, object]:
     return {"selection": {"rows": list(rows), "columns": [], "cells": []}}
-
-
-def keep_row_selection(state: MutableMapping[str, Any], session_key: str) -> None:
-    nonce_key = f"{session_key}_nonce"
-    old_nonce = int(state.get(nonce_key) or 0)
-    rows = selected_rows(state.get(results_editor_key(session_key, old_nonce)))
-    new_nonce = old_nonce + 1
-    state[nonce_key] = new_nonce
-    state[results_editor_key(session_key, new_nonce)] = selection_state(rows)
 
 
 def crawl_filter_mode(exclude_crawled: bool, only_crawled: bool) -> str:

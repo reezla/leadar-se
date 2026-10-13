@@ -86,7 +86,7 @@ def _draft_company(
     profile = _profile_for_draft(scored)
     _notify(on_progress, done - 1, total, f"{company.name}: drafting email...")
     match = scored.product_match or match_company(company, catalog)
-    outreach = writer.write(company, profile, match, sender)
+    outreach = writer.write(company, profile, match, sender, analysis=scored.analysis)
     ai_detail = outreach.detail if outreach.detail.startswith("AI generation") else ""
     if scored.crawl_detail and not ai_detail:
         outreach = outreach.model_copy(update={"detail": scored.crawl_detail})

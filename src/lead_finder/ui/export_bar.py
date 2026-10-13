@@ -14,13 +14,8 @@ def render_export_bar(
     selected: list[ScoredCompany],
     download_name: str,
 ) -> None:
-    if not selected:
-        _export_menu("Export all", companies, download_name=download_name)
-        return
-    all_column, selected_column, _spacer = st.columns([1.2, 1.4, 3])
-    with all_column:
-        _export_menu("Export all", companies, download_name=download_name)
-    with selected_column:
+    _export_menu("Export all", companies, download_name=download_name)
+    if selected:
         _export_menu(
             "Export selected",
             selected,

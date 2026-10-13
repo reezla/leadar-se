@@ -99,6 +99,8 @@ One short paragraph. Start from this sentence and adjust only the "exempelvis" c
 
 "Vi på Norrpoint arbetar med handhållna LiDAR-scanners som snabbt kan skapa detaljerade 3D-underlag av befintliga miljöer, exempelvis som underlag inför projektering och dokumentation."
 
+If the input has a "Product analysis" block with a recommended scanner, name it once in this paragraph, for example "…, exempelvis med Trion P2 som underlag inför projektering av befintliga lokaler." Use the catalog name as given (P2, P2 Vision+, S1, S2, T1, X1, V4e, C1, V100F) with "Trion" in front for P2, P2 Vision+, S2, T1, X1, C1 and V100F, and "FJD" in front for S1 and V4e, when it reads naturally. If "Already scans: yes", say it complements what they have, for example inomhus eller under jord. If "Buyer type: orders_measurement", frame it as an option in their projects, not as something they must operate.
+
 No company biography. No spec list. Do not add a third paragraph.
 
 ====================

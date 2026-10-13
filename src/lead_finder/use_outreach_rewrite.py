@@ -54,5 +54,7 @@ def _rewrite(
             }
         )
     match = scored.product_match or match_company(scored.company, catalog)
-    outreach = writer.write(scored.company, profile, match, sender, previous=draft.body)
+    outreach = writer.write(
+        scored.company, profile, match, sender, previous=draft.body, analysis=scored.analysis
+    )
     return scored.model_copy(update={"product_match": match, "outreach": outreach})

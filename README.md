@@ -109,6 +109,22 @@ Before using the list for sales, manually review the first 50–100 results:
 
 Use the review to adjust SNI prefixes, keywords, job rules, and weights.
 
+## Product analysis after crawl
+
+Every crawled company is analyzed straight after its site is read. The result picks the
+Norrpoint scanner(s) to recommend and is saved to `companies.recommended_product`,
+`alternative_products`, `buyer_type`, `customer_fit`, `product_analysis` and `analyzed_at`.
+See `norrpoint-scanners.md` for the products and the logic, and `config/scanners.yaml` to tune it.
+
+- With `OPENAI_API_KEY` the model decides (optionally a different model via `ANALYSIS_MODEL`).
+  Without it, the rules in `config/jobs.yaml` are used.
+- Select companies and click **Generate leads**. New companies are crawled and analyzed.
+  Companies that are already crawled reuse their saved website text and are only analyzed,
+  so selecting old rows is the way to add recommendations to them.
+- Apply `supabase/migrations/20261012135408_add_product_analysis.sql` first
+  (`supabase db push`, or paste it in the SQL editor). Until then the app keeps working and
+  saves without the analysis columns.
+
 ## HubSpot import
 
 Download the CSV from the application and import it as **Companies** in HubSpot.

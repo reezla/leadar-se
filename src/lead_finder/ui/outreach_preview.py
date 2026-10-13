@@ -6,6 +6,7 @@ import streamlit as st
 
 from lead_finder.models import ScoredCompany
 from lead_finder.ui.copy_email import render_copy_email
+from lead_finder.ui.copy_field import website_href
 from lead_finder.use_company_search import SearchResult
 from lead_finder.use_outreach_rewrite import rewrite_outreach
 
@@ -50,8 +51,15 @@ def render_outreach_preview(
     if draft is None:
         return result
     website = scored.company.domain or (draft.website.url if draft.website else "")
-    if website:
-        st.caption(f"Website: {website}")
+    href = website_href(website)
+    if href:
+        safe_href = escape(href, quote=True)
+        safe_label = escape(website, quote=True)
+        link = (
+            f'Website: <a href="{safe_href}" target="_blank" '
+            f'rel="noopener noreferrer">{safe_label}</a>'
+        )
+        st.markdown(link, unsafe_allow_html=True)
     _render_market_fit(draft.customer_fit, draft.customer_fit_reason)
     if draft.suggested_recipient:
         st.caption(f"Suggested recipient: {draft.suggested_recipient}")

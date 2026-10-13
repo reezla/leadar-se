@@ -21,7 +21,6 @@ from lead_finder.use_email_desk import (
     source_entries,
 )
 from lead_finder.use_outreach import generate_outreach
-from lead_finder.use_result_columns import use_result_columns
 
 logger = logging.getLogger(__name__)
 
@@ -76,13 +75,10 @@ def _write_desk(
     st.subheader("Choose companies")
     seed_email_selection(st.session_state, session_key, result, companies)
     rows, available = crawled_table(companies)
-    state_key = f"email_columns_{session_key}"
     selected = render_result_table(
         rows,
         available=available,
-        order=use_result_columns(available, state_key=state_key),
         widget_key=f"email_pick_{session_key}",
-        state_key=state_key,
         explanations=[score_explanation(scored) for scored in companies],
     )
     settings = get_settings()

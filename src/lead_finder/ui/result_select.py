@@ -21,8 +21,6 @@ def render_select_more(
     visual_order: list[int] | None = None,
 ) -> None:
     exclude_key, only_key = _filter_keys(session_key)
-    if exclude_key not in st.session_state and only_key not in st.session_state:
-        st.session_state[exclude_key] = True
     mode = crawl_filter_mode(
         bool(st.session_state.get(exclude_key)),
         bool(st.session_state.get(only_key)),
